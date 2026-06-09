@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 @Service
 public class RelatorioService {
@@ -29,10 +29,7 @@ public class RelatorioService {
 
     public byte[] gerarRelatorioGeralPdf() throws Exception {
         List<Reagente> reagentes = reagenteRepository.findAll();
-
-        // Método com JOIN FETCH para carregamento Eager
         List<Movimentacao> movimentacoes = movimentacaoRepository.findAllWithDetailsOrderByDataDesc();
-
         return gerarPdfComDados("Relatório Geral", reagentes, movimentacoes, null);
     }
 
@@ -45,17 +42,13 @@ public class RelatorioService {
         List<Movimentacao> movsPrimeiroSemestre = movimentacaoRepository.findByDataBetween(inicioPrimeiroSemestre, fimPrimeiroSemestre);
         List<Movimentacao> movsSegundoSemestre = movimentacaoRepository.findByDataBetween(inicioSegundoSemestre, fimSegundoSemestre);
 
-        Map<String, Map<String, Map<String, BigDecimal>>> primeiroSemestre = agruparPorMateriaTurmaReagente(movsPrimeiroSemestre);
-        Map<String, Map<String, Map<String, BigDecimal>>> segundoSemestre = agruparPorMateriaTurmaReagente(movsSegundoSemestre);
-
         Map<String, Object> semestresAgrupados = new HashMap<>();
-        semestresAgrupados.put("primeiro_semestre", primeiroSemestre);
-        semestresAgrupados.put("segundo_semestre", segundoSemestre);
+        semestresAgrupados.put("primeiro_semestre", agruparPorMateriaTurmaReagente(movsPrimeiroSemestre));
+        semestresAgrupados.put("segundo_semestre", agruparPorMateriaTurmaReagente(movsSegundoSemestre));
 
         return gerarPdfComDados("Relatório Semestral " + ano, null, null, semestresAgrupados);
     }
 
-    // Lógica de Geração de PDF (iText)
     private byte[] gerarPdfComDados(String titulo, List<Reagente> reagentes, List<Movimentacao> movimentacoes, Map<String, Object> semestresAgrupados) throws DocumentException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -64,189 +57,157 @@ public class RelatorioService {
         document.open();
 
         Font fontTitulo = new Font(Font.FontFamily.HELVETICA, 16, Font.BOLD, BaseColor.BLACK);
-        Font fontCabecalho = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE); 
+        Font fontCabecalho = new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE);
         Font fontCorpo = new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL, BaseColor.BLACK);
 
         document.add(new Paragraph(titulo + "\n\n", fontTitulo));
 
-        // --- 1. RELATÓRIO GERAL: DETALHES DE MOVIMENTAÇÃO ---
         if (movimentacoes != null && !movimentacoes.isEmpty()) {
             document.add(new Paragraph("Movimentações Detalhadas:", fontCorpo));
             document.add(new Paragraph("\n"));
 
-            // Novo: Tabela com apenas Reagente e Quantidade
             PdfPTable table = new PdfPTable(2);
             table.setWidthPercentage(70);
             table.setSpacingBefore(10f);
+            table.setWidths(new float[]{3f, 1.5f});
 
-            float[] columnWidths = {3f, 1.5f};
-            table.setWidths(columnWidths);
-
-            // Cabeçalho
-            String[] headers = {"Reagente", "Quantidade"};
-            for (String header : headers) {
+            for (String header : new String[]{"Reagente", "Quantidade"}) {
                 PdfPCell cell = new PdfPCell(new Phrase(header, fontCabecalho));
                 cell.setBackgroundColor(BaseColor.DARK_GRAY);
                 cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 cell.setPadding(5);
                 table.addCell(cell);
             }
-            // Agrupa quantidades por reagente com sinal: ENTRADA positivo, RETIRADA negativo
-            Map<String, BigDecimal> totaisPorReagenteSigned = new HashMap<>();
+
+            Map<String, BigDecimal> totaisPorReagente = new HashMap<>();
             for (Movimentacao mov : movimentacoes) {
-                String nomeReagente = (mov.getReagente() != null) ? mov.getReagente().getNome() : "N/A";
+                String nomeReagente = mov.getReagente() != null ? mov.getReagente().getNome() : "N/A";
                 BigDecimal quantidade = mov.getQuantidade() != null ? mov.getQuantidade() : BigDecimal.ZERO;
                 String tipo = mov.getTipo() != null ? mov.getTipo().toUpperCase() : "";
-                BigDecimal signed = quantidade;
-                if ("RETIRADA".equals(tipo)) signed = quantidade.negate();
-                totaisPorReagenteSigned.merge(nomeReagente, signed, BigDecimal::add);
+                BigDecimal signed = "RETIRADA".equals(tipo) ? quantidade.negate() : quantidade;
+                totaisPorReagente.merge(nomeReagente, signed, BigDecimal::add);
             }
 
-            // Preenche tabela: mostra, para cada reagente, a quantidade total (negativa quando retirada)
-            for (Map.Entry<String, BigDecimal> entry : totaisPorReagenteSigned.entrySet()) {
+            for (Map.Entry<String, BigDecimal> entry : totaisPorReagente.entrySet()) {
                 table.addCell(new Phrase(entry.getKey(), fontCorpo));
                 BigDecimal v = entry.getValue();
-                String qty = (v == null) ? "0" : (v.signum() < 0 ? ("-" + v.abs().toString()) : v.toString());
+                String qty = v == null ? "0" : (v.signum() < 0 ? "-" + v.abs() : v.toString());
                 table.addCell(new Phrase(qty, fontCorpo));
             }
 
             document.add(table);
         } else if (movimentacoes != null) {
-            document.add(new Paragraph("Nenhuma movimentação encontrada para o relatório geral.", fontCorpo));
+            document.add(new Paragraph("Nenhuma movimentação encontrada.", fontCorpo));
         }
 
-        // --- 2. RELATÓRIO SEMESTRAL: Resumo ---
         if (semestresAgrupados != null) {
             document.add(new Paragraph("\n\nResumo Semestral por Matéria:", fontCorpo));
+
             for (String semestreKey : new String[]{"primeiro_semestre", "segundo_semestre"}) {
-                Map<String, Map<String, Map<String, BigDecimal>>> agrupamentoSemestre = (Map<String, Map<String, Map<String, BigDecimal>>>) semestresAgrupados.get(semestreKey);
-                if (agrupamentoSemestre != null && !agrupamentoSemestre.isEmpty()) {
-                    document.add(new Paragraph("\n--- " + (semestreKey.equals("primeiro_semestre") ? "1º SEMESTRE" : "2º SEMESTRE") + " ---", fontCabecalho));
+                @SuppressWarnings("unchecked")
+                Map<String, Map<String, Map<String, BigDecimal>>> agrupamento =
+                        (Map<String, Map<String, Map<String, BigDecimal>>>) semestresAgrupados.get(semestreKey);
 
-                    // Ordena matérias
-                    java.util.List<String> materias = new java.util.ArrayList<>(agrupamentoSemestre.keySet());
-                    java.util.Collections.sort(materias);
+                if (agrupamento == null || agrupamento.isEmpty()) continue;
 
-                    // Gera layout em grade parecido com o modelo: 2 colunas por linha
-                    int columnsPerRow = 2;
-                    PdfPTable outerTable = new PdfPTable(columnsPerRow);
-                    outerTable.setWidthPercentage(100);
-                    float[] outerWidths = new float[columnsPerRow];
-                    for (int i = 0; i < columnsPerRow; i++) outerWidths[i] = 1f;
-                    outerTable.setWidths(outerWidths);
+                String semestreLabel = "primeiro_semestre".equals(semestreKey) ? "1º SEMESTRE" : "2º SEMESTRE";
+                document.add(new Paragraph("\n--- " + semestreLabel + " ---", fontCabecalho));
 
-                    for (String materia : materias) {
-                        Map<String, Map<String, BigDecimal>> turmasMap = agrupamentoSemestre.get(materia);
-                        // Cria tabela interna para a matéria
-                        PdfPTable materiaTable = new PdfPTable(1);
-                        materiaTable.setWidthPercentage(100);
+                java.util.List<String> materias = new java.util.ArrayList<>(agrupamento.keySet());
+                java.util.Collections.sort(materias);
 
-                        PdfPCell materiaHeader = new PdfPCell(new Phrase(materia, fontCabecalho));
-                        materiaHeader.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                        materiaHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
-                        materiaHeader.setPadding(6);
-                        materiaTable.addCell(materiaHeader);
+                int columnsPerRow = 2;
+                PdfPTable outerTable = new PdfPTable(columnsPerRow);
+                outerTable.setWidthPercentage(100);
+                outerTable.setWidths(new float[]{1f, 1f});
 
-                        if (turmasMap != null && !turmasMap.isEmpty()) {
-                            java.util.List<String> turmas = new java.util.ArrayList<>(turmasMap.keySet());
-                            java.util.Collections.sort(turmas);
-                            for (String turma : turmas) {
-                                // Turma label
-                                PdfPCell turmaCell = new PdfPCell(new Phrase("Turma: " + turma, fontCorpo));
-                                turmaCell.setBorder(Rectangle.NO_BORDER);
-                                turmaCell.setPaddingTop(4);
-                                turmaCell.setPaddingBottom(2);
-                                materiaTable.addCell(turmaCell);
+                for (String materia : materias) {
+                    Map<String, Map<String, BigDecimal>> turmasMap = agrupamento.get(materia);
+                    PdfPTable materiaTable = new PdfPTable(1);
+                    materiaTable.setWidthPercentage(100);
 
-                                // Tabela de reagentes dentro da turma
-                                PdfPTable inner = new PdfPTable(2);
-                                inner.setWidthPercentage(100);
-                                inner.setSpacingBefore(2f);
-                                inner.setWidths(new float[]{3f, 1.5f});
+                    PdfPCell materiaHeader = new PdfPCell(new Phrase(materia, fontCabecalho));
+                    materiaHeader.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                    materiaHeader.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    materiaHeader.setPadding(6);
+                    materiaTable.addCell(materiaHeader);
 
-                                PdfPCell hc1 = new PdfPCell(new Phrase("REAGENTE:", fontCabecalho));
-                                hc1.setBackgroundColor(BaseColor.GRAY);
-                                hc1.setPadding(4);
-                                inner.addCell(hc1);
-                                PdfPCell hc2 = new PdfPCell(new Phrase("QUANTIDADE:", fontCabecalho));
-                                hc2.setBackgroundColor(BaseColor.GRAY);
-                                hc2.setPadding(4);
-                                inner.addCell(hc2);
+                    if (turmasMap != null && !turmasMap.isEmpty()) {
+                        java.util.List<String> turmas = new java.util.ArrayList<>(turmasMap.keySet());
+                        java.util.Collections.sort(turmas);
 
-                                Map<String, BigDecimal> reagentesMap = turmasMap.get(turma);
-                                java.util.List<String> nomesReagentes = new java.util.ArrayList<>();
-                                if (reagentesMap != null) {
-                                    nomesReagentes.addAll(reagentesMap.keySet());
-                                }
-                                java.util.Collections.sort(nomesReagentes);
-                                for (String nomeReagente : nomesReagentes) {
-                                    inner.addCell(new Phrase(nomeReagente, fontCorpo));
-                                    BigDecimal v = reagentesMap.get(nomeReagente);
-                                    String qty;
-                                    if (v == null) {
-                                        qty = "0";
-                                    } else if (v.signum() < 0) {
-                                        qty = "-" + v.abs().toString();
-                                    } else {
-                                        qty = v.toString();
-                                    }
-                                    inner.addCell(new Phrase(qty, fontCorpo));
-                                }
+                        for (String turma : turmas) {
+                            PdfPCell turmaCell = new PdfPCell(new Phrase("Turma: " + turma, fontCorpo));
+                            turmaCell.setBorder(Rectangle.NO_BORDER);
+                            turmaCell.setPaddingTop(4);
+                            turmaCell.setPaddingBottom(2);
+                            materiaTable.addCell(turmaCell);
 
-                                PdfPCell innerCell = new PdfPCell(inner);
-                                innerCell.setPadding(4);
-                                materiaTable.addCell(innerCell);
+                            PdfPTable inner = new PdfPTable(2);
+                            inner.setWidthPercentage(100);
+                            inner.setSpacingBefore(2f);
+                            inner.setWidths(new float[]{3f, 1.5f});
+
+                            PdfPCell hc1 = new PdfPCell(new Phrase("REAGENTE:", fontCabecalho));
+                            hc1.setBackgroundColor(BaseColor.GRAY);
+                            hc1.setPadding(4);
+                            inner.addCell(hc1);
+
+                            PdfPCell hc2 = new PdfPCell(new Phrase("QUANTIDADE:", fontCabecalho));
+                            hc2.setBackgroundColor(BaseColor.GRAY);
+                            hc2.setPadding(4);
+                            inner.addCell(hc2);
+
+                            Map<String, BigDecimal> reagentesMap = turmasMap.get(turma);
+                            java.util.List<String> nomesReagentes = reagentesMap != null
+                                    ? new java.util.ArrayList<>(reagentesMap.keySet())
+                                    : new java.util.ArrayList<>();
+                            java.util.Collections.sort(nomesReagentes);
+
+                            for (String nomeReagente : nomesReagentes) {
+                                inner.addCell(new Phrase(nomeReagente, fontCorpo));
+                                BigDecimal v = reagentesMap.get(nomeReagente);
+                                String qty = v == null ? "0" : (v.signum() < 0 ? "-" + v.abs() : v.toString());
+                                inner.addCell(new Phrase(qty, fontCorpo));
                             }
-                        } else {
-                            PdfPCell none = new PdfPCell(new Phrase("Nenhuma turma", fontCorpo));
-                            none.setBorder(Rectangle.NO_BORDER);
-                            materiaTable.addCell(none);
-                        }
 
-                        // Adiciona a tabela da matéria como célula na tabela externa
-                        PdfPCell wrapper = new PdfPCell(materiaTable);
-                        wrapper.setPadding(6);
-                        outerTable.addCell(wrapper);
+                            PdfPCell innerCell = new PdfPCell(inner);
+                            innerCell.setPadding(4);
+                            materiaTable.addCell(innerCell);
+                        }
+                    } else {
+                        PdfPCell none = new PdfPCell(new Phrase("Nenhuma turma", fontCorpo));
+                        none.setBorder(Rectangle.NO_BORDER);
+                        materiaTable.addCell(none);
                     }
 
-                    // Se não completou a última linha, adiciona células vazias
-                    int remainder = materias.size() % columnsPerRow;
-                    if (remainder != 0) {
-                        for (int i = 0; i < (columnsPerRow - remainder); i++) {
-                            PdfPCell empty = new PdfPCell(new Phrase(""));
-                            empty.setBorder(Rectangle.NO_BORDER);
-                            outerTable.addCell(empty);
-                        }
-                    }
-
-                    document.add(outerTable);
+                    PdfPCell wrapper = new PdfPCell(materiaTable);
+                    wrapper.setPadding(6);
+                    outerTable.addCell(wrapper);
                 }
+
+                int remainder = materias.size() % columnsPerRow;
+                if (remainder != 0) {
+                    for (int i = 0; i < columnsPerRow - remainder; i++) {
+                        PdfPCell empty = new PdfPCell(new Phrase(""));
+                        empty.setBorder(Rectangle.NO_BORDER);
+                        outerTable.addCell(empty);
+                    }
+                }
+
+                document.add(outerTable);
             }
         }
-        // --- FIM DOS RELATÓRIOS ---
 
         document.close();
-
         return outputStream.toByteArray();
-    }
-
-    private Map<String, Map<String, BigDecimal>> agruparMovimentacoesPorMateriaEReagente(List<Movimentacao> movimentacoes) {
-        Map<String, Map<String, BigDecimal>> agrupamento = new HashMap<>();
-        for (Movimentacao mov : movimentacoes) {
-            String nomeMateria = (mov.getMateria() != null) ? mov.getMateria().getNome() : "N/A";
-            String nomeReagente = (mov.getReagente() != null) ? mov.getReagente().getNome() : "N/A";
-            BigDecimal quantidade = mov.getQuantidade();
-            agrupamento.computeIfAbsent(nomeMateria, k -> new HashMap<>());
-            Map<String, BigDecimal> reagentes = agrupamento.get(nomeMateria);
-            reagentes.merge(nomeReagente, quantidade, BigDecimal::add);
-        }
-        return agrupamento;
     }
 
     private Map<String, Map<String, Map<String, BigDecimal>>> agruparPorMateriaTurmaReagente(List<Movimentacao> movimentacoes) {
         Map<String, Map<String, Map<String, BigDecimal>>> agrupamento = new HashMap<>();
         for (Movimentacao mov : movimentacoes) {
-            String nomeMateria = (mov.getMateria() != null) ? mov.getMateria().getNome() : "N/A";
+            String nomeMateria = mov.getMateria() != null ? mov.getMateria().getNome() : "N/A";
+
             String nomeTurma = "N/A";
             if (mov.getTurma() != null) {
                 String sala = mov.getTurma().getSala() != null ? mov.getTurma().getSala() : "";
@@ -254,21 +215,15 @@ public class RelatorioService {
                 nomeTurma = (sala + " " + nome).trim();
                 if (nomeTurma.isEmpty()) nomeTurma = "N/A";
             }
-            String nomeReagente = (mov.getReagente() != null) ? mov.getReagente().getNome() : "N/A";
-            BigDecimal quantidade = mov.getQuantidade();
 
-            // Acumula quantidades com sinal: ENTRADA = +, RETIRADA = -
-            BigDecimal signed = quantidade != null ? quantidade : BigDecimal.ZERO;
+            String nomeReagente = mov.getReagente() != null ? mov.getReagente().getNome() : "N/A";
+            BigDecimal quantidade = mov.getQuantidade() != null ? mov.getQuantidade() : BigDecimal.ZERO;
             String tipo = mov.getTipo() != null ? mov.getTipo().toUpperCase() : "";
-            if ("RETIRADA".equals(tipo)) {
-                signed = signed.negate();
-            }
+            BigDecimal signed = "RETIRADA".equals(tipo) ? quantidade.negate() : quantidade;
 
-            agrupamento.computeIfAbsent(nomeMateria, k -> new HashMap<>());
-            Map<String, Map<String, BigDecimal>> turmas = agrupamento.get(nomeMateria);
-            turmas.computeIfAbsent(nomeTurma, k -> new HashMap<>());
-            Map<String, BigDecimal> reagentes = turmas.get(nomeTurma);
-            reagentes.merge(nomeReagente, signed, BigDecimal::add);
+            agrupamento.computeIfAbsent(nomeMateria, k -> new HashMap<>())
+                    .computeIfAbsent(nomeTurma, k -> new HashMap<>())
+                    .merge(nomeReagente, signed, BigDecimal::add);
         }
         return agrupamento;
     }

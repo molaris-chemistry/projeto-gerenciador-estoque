@@ -24,7 +24,7 @@ public class Movimentacao {
 
     @NotBlank(message = "Tipo é obrigatório")
     @Column(nullable = false, length = 10)
-    private String tipo; // 'ENTRADA' ou 'RETIRADA'
+    private String tipo;
 
     @NotNull(message = "Reagente é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,16 +36,13 @@ public class Movimentacao {
     @Column(nullable = false, precision = 10, scale = 3)
     private BigDecimal quantidade;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "materia_id", nullable = false)
     private Materia materia;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "turma_id", nullable = false)
     private Turma turma;
-
 
     @NotNull(message = "Data é obrigatória")
     @Column(nullable = false)
@@ -55,15 +52,11 @@ public class Movimentacao {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-
-
-
     public String getNomeMateriaSeguro() {
-        return this.materia != null ? this.materia.getNome() : "N/A";
+        return materia != null ? materia.getNome() : "N/A";
     }
 
-
     public String getNomeTurmaSeguro() {
-        return this.turma != null ? this.turma.getNome() : "N/A";
+        return turma != null ? turma.getNome() : "N/A";
     }
 }

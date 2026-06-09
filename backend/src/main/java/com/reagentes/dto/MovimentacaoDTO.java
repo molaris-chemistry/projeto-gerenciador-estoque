@@ -11,7 +11,7 @@ public class MovimentacaoDTO {
     private Long id;
 
     @NotBlank(message = "Tipo é obrigatório")
-    private String tipo; // ENTRADA ou RETIRADA
+    private String tipo;
 
     @NotNull(message = "ID do reagente é obrigatório")
     private Long reagenteId;
@@ -20,26 +20,21 @@ public class MovimentacaoDTO {
     @Positive(message = "Quantidade deve ser positiva")
     private BigDecimal quantidade;
 
-    // MUDANÇA 1: Validação corrigida de @NotBlank para @NotNull (para Long)
     @NotNull(message = "Matéria é obrigatória")
     private Long materiaId;
 
-    // MUDANÇA 2: Validação corrigida de @NotBlank para @NotNull (para Long)
     @NotNull(message = "Turma é obrigatória")
     private Long turmaId;
 
     private LocalDateTime data;
 
-    // Campos opcionais para exibição no frontend (não validados)
     private String reagenteNome;
-    private String materias;
+    private String materia;
     private String turma;
     private String unidade;
 
-    // Construtores
     public MovimentacaoDTO() {}
 
-    // MUDANÇA 3: Construtor corrigido para aceitar Longs
     public MovimentacaoDTO(Long id, String tipo, Long reagenteId, BigDecimal quantidade,
                            Long materiaId, Long turmaId, LocalDateTime data) {
         this.id = id;
@@ -51,7 +46,6 @@ public class MovimentacaoDTO {
         this.data = data;
     }
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -84,7 +78,6 @@ public class MovimentacaoDTO {
         this.quantidade = quantidade;
     }
 
-    // MUDANÇA 4: Getters e Setters corretos para materiaId
     public Long getMateriaId() {
         return materiaId;
     }
@@ -93,7 +86,6 @@ public class MovimentacaoDTO {
         this.materiaId = materiaId;
     }
 
-    // MUDANÇA 5: Getters e Setters corretos para turmaId
     public Long getTurmaId() {
         return turmaId;
     }
@@ -110,7 +102,6 @@ public class MovimentacaoDTO {
         this.data = data;
     }
 
-    // Getters e Setters para campos de exibição
     public String getReagenteNome() {
         return reagenteNome;
     }
@@ -120,11 +111,11 @@ public class MovimentacaoDTO {
     }
 
     public String getMateria() {
-        return materias;
+        return materia;
     }
 
     public void setMateria(String materia) {
-        this.materias = materia;
+        this.materia = materia;
     }
 
     public String getTurma() {

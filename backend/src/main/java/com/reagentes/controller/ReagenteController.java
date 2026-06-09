@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reagentes")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ReagenteController {
 
     @Autowired
@@ -22,8 +21,7 @@ public class ReagenteController {
 
     @GetMapping
     public ResponseEntity<List<ReagenteDTO>> getAllReagentes() {
-        List<Reagente> reagentes = reagenteService.findAll();
-        List<ReagenteDTO> reagenteDTOs = reagentes.stream()
+        List<ReagenteDTO> reagenteDTOs = reagenteService.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reagenteDTOs);
@@ -39,8 +37,7 @@ public class ReagenteController {
 
     @GetMapping("/search")
     public ResponseEntity<List<ReagenteDTO>> searchReagentes(@RequestParam String q) {
-        List<Reagente> reagentes = reagenteService.searchByNome(q);
-        List<ReagenteDTO> reagenteDTOs = reagentes.stream()
+        List<ReagenteDTO> reagenteDTOs = reagenteService.searchByNome(q).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reagenteDTOs);
@@ -49,10 +46,9 @@ public class ReagenteController {
     @PostMapping
     public ResponseEntity<ReagenteDTO> createReagente(@Valid @RequestBody ReagenteDTO reagenteDTO) {
         if (reagenteService.existsByNome(reagenteDTO.getNome())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409 Conflict
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        Reagente reagente = convertToEntity(reagenteDTO);
-        Reagente savedReagente = reagenteService.save(reagente);
+        Reagente savedReagente = reagenteService.save(convertToEntity(reagenteDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(savedReagente));
     }
 
@@ -89,4 +85,3 @@ public class ReagenteController {
         return reagente;
     }
 }
-

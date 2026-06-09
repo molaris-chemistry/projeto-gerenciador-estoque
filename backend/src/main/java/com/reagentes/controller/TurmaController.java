@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/turmas")
-@CrossOrigin(origins = "http://localhost:5173")
 public class TurmaController {
 
     @Autowired
@@ -22,8 +21,7 @@ public class TurmaController {
 
     @GetMapping
     public ResponseEntity<List<TurmaDTO>> getAllTurmas() {
-        List<Turma> turmas = turmaService.findAll();
-        List<TurmaDTO> turmaDTOs = turmas.stream()
+        List<TurmaDTO> turmaDTOs = turmaService.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(turmaDTOs);
@@ -40,11 +38,10 @@ public class TurmaController {
     @PostMapping
     public ResponseEntity<TurmaDTO> createTurma(@Valid @RequestBody TurmaDTO turmaDTO) {
         try {
-            Turma turma = convertToEntity(turmaDTO);
-            Turma savedTurma = turmaService.save(turma);
+            Turma savedTurma = turmaService.save(convertToEntity(turmaDTO));
             return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(savedTurma));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // 409 Conflict
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
@@ -70,4 +67,3 @@ public class TurmaController {
         return turma;
     }
 }
-

@@ -13,23 +13,20 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Turma {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @NotBlank(message = "Sala é obrigatória")
     @Column(nullable = false, length = 20)
-    private String sala; // "1º Ano", "2º Ano", "3º Ano"
-    
+    private String sala;
+
     @NotBlank(message = "Nome é obrigatório")
     @Column(nullable = false, length = 10)
-    private String nome; // "1ºA", "1ºB", etc.
-    
+    private String nome;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-
 }
-

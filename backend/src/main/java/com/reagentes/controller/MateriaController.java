@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/materias")
-@CrossOrigin(origins = "http://localhost:5173")
 public class MateriaController {
 
     @Autowired
@@ -22,8 +21,7 @@ public class MateriaController {
 
     @GetMapping
     public ResponseEntity<List<MateriaDTO>> getAllMaterias() {
-        List<Materia> materias = materiaService.findAll();
-        List<MateriaDTO> materiaDTOs = materias.stream()
+        List<MateriaDTO> materiaDTOs = materiaService.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(materiaDTOs);
@@ -40,11 +38,10 @@ public class MateriaController {
     @PostMapping
     public ResponseEntity<MateriaDTO> createMateria(@Valid @RequestBody MateriaDTO materiaDTO) {
         try {
-            Materia materia = convertToEntity(materiaDTO);
-            Materia savedMateria = materiaService.save(materia);
+            Materia savedMateria = materiaService.save(convertToEntity(materiaDTO));
             return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(savedMateria));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(null); // 409 Conflict
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
@@ -69,4 +66,3 @@ public class MateriaController {
         return materia;
     }
 }
-
