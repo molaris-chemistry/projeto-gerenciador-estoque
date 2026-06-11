@@ -1,13 +1,17 @@
 {
   "name": "mobile",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "dependencies": {
     "@types/react": "~19.2.14",
     "expo": "~56.0.9",
+    "expo-linear-gradient": "~14.1.4",
+    "expo-router": "~5.0.7",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
     "react-native": "0.85.3",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
     "typescript": "~6.0.3"
   },
   "publishConfig": {
