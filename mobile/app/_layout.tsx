@@ -11,7 +11,9 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: '#0A0A0F' },
           animation: 'fade',
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" />
+      </Stack>
     </>
   );
 }

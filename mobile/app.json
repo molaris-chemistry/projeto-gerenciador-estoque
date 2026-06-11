@@ -6,6 +6,9 @@
     "scheme": "molaris",
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "android": {
+      "package": "com.anonymous.mobile"
+    }
   }
 }

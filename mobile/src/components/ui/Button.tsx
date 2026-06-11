@@ -9,7 +9,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '../constants';
+import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '@/constants/Colors';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
