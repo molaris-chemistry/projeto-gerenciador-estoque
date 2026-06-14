@@ -1,7 +1,7 @@
 // ─── Navigation ───────────────────────────────────────────────
 export type RootStackParamList = {
   index: undefined;
-  '(tabs)': undefined;
+  "(tabs)": undefined;
 };
 
 // ─── Domain ──────────────────────────────────────────────────
@@ -28,9 +28,53 @@ export interface Category {
 export interface StockMovement {
   id: string;
   productId: string;
-  type: 'IN' | 'OUT' | 'ADJUSTMENT';
+  type: "IN" | "OUT" | "ADJUSTMENT";
   quantity: number;
   reason?: string;
   performedBy?: string;
   createdAt: Date;
+}
+
+// ─── Reagente ────────────────────────────────────────────────
+export interface Reagente {
+  id: number;
+  nome: string;
+  quantidade: number;
+  unidade: string;
+}
+
+// ─── Materia ────────────────────────────────────────────────
+export interface Materia {
+  id: number;
+  nome: string;
+}
+
+// ─── Turma ──────────────────────────────────────────────────
+export interface Turma {
+  id: number;
+  sala: string;
+  nome: string;
+}
+
+// ─── Movimentacao ───────────────────────────────────────────
+export interface Movimentacao {
+  id: number;
+  tipo: "ENTRADA" | "RETIRADA";
+  reagenteId: number;
+  quantidade: number;
+  materiaId: number;
+  turmaId: number;
+  data: string;
+  reagenteNome?: string;
+  materia?: string;
+  turma?: string;
+  unidade?: string;
+}
+
+export interface MovimentacaoRequest {
+  tipo: "ENTRADA" | "RETIRADA";
+  reagenteId: number;
+  quantidade: number;
+  materiaId: number;
+  turmaId: number;
 }

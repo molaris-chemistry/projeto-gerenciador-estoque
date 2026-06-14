@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
@@ -7,14 +7,20 @@ import {
   TouchableOpacityProps,
   ViewStyle,
   TextStyle,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '@/constants/Colors';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  Colors,
+  BorderRadius,
+  FontSize,
+  FontWeight,
+  Spacing,
+} from "@/constants/Colors";
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
@@ -22,8 +28,8 @@ interface ButtonProps extends TouchableOpacityProps {
 
 export function Button({
   title,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   isLoading = false,
   style,
   textStyle,
@@ -33,12 +39,24 @@ export function Button({
   const isDisabled = disabled || isLoading;
 
   const sizeStyles = {
-    sm: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, fontSize: FontSize.sm },
-    md: { paddingHorizontal: Spacing.xl, paddingVertical: 14, fontSize: FontSize.base },
-    lg: { paddingHorizontal: Spacing.xxl, paddingVertical: 18, fontSize: FontSize.lg },
+    sm: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      fontSize: FontSize.sm,
+    },
+    md: {
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: 14,
+      fontSize: FontSize.base,
+    },
+    lg: {
+      paddingHorizontal: Spacing.xxl,
+      paddingVertical: 18,
+      fontSize: FontSize.lg,
+    },
   }[size];
 
-  if (variant === 'primary') {
+  if (variant === "primary") {
     return (
       <TouchableOpacity
         {...props}
@@ -52,14 +70,23 @@ export function Button({
           end={{ x: 1, y: 0 }}
           style={[
             styles.base,
-            { paddingHorizontal: sizeStyles.paddingHorizontal, paddingVertical: sizeStyles.paddingVertical },
+            {
+              paddingHorizontal: sizeStyles.paddingHorizontal,
+              paddingVertical: sizeStyles.paddingVertical,
+            },
             isDisabled && styles.disabled,
           ]}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={[styles.textPrimary, { fontSize: sizeStyles.fontSize }, textStyle]}>
+            <Text
+              style={[
+                styles.textPrimary,
+                { fontSize: sizeStyles.fontSize },
+                textStyle,
+              ]}
+            >
               {title}
             </Text>
           )}
@@ -76,17 +103,25 @@ export function Button({
       style={[
         styles.base,
         styles[variant],
-        { paddingHorizontal: sizeStyles.paddingHorizontal, paddingVertical: sizeStyles.paddingVertical },
+        {
+          paddingHorizontal: sizeStyles.paddingHorizontal,
+          paddingVertical: sizeStyles.paddingVertical,
+        },
         isDisabled && styles.disabled,
         style,
       ]}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'outline' ? Colors.primary : '#fff'} size="small" />
+        <ActivityIndicator
+          color={variant === "outline" ? Colors.primary : "#fff"}
+          size="small"
+        />
       ) : (
         <Text
           style={[
-            variant === 'outline' || variant === 'ghost' ? styles.textOutline : styles.textPrimary,
+            variant === "outline" || variant === "ghost"
+              ? styles.textOutline
+              : styles.textPrimary,
             { fontSize: sizeStyles.fontSize },
             textStyle,
           ]}
@@ -101,13 +136,13 @@ export function Button({
 const styles = StyleSheet.create({
   wrapper: {
     borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   base: {
     borderRadius: BorderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
     gap: Spacing.sm,
   },
   secondary: {
@@ -116,12 +151,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1.5,
     borderColor: Colors.primary,
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   disabled: {
     opacity: 0.5,

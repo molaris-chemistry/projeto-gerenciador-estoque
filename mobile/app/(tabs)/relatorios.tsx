@@ -1,11 +1,7 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
-import { Colors, FontSize, FontWeight, Spacing } from '@/constants/Colors';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors, FontSize, FontWeight, Spacing } from "@/constants/Colors";
 
 export default function RelatoriosScreen() {
   return (
@@ -50,12 +46,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: Spacing.xl,
   },
   placeholder: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: Spacing.lg,
   },
   placeholderIcon: {
@@ -64,7 +60,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: FontSize.md,
     color: Colors.textTertiary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
   },
 });

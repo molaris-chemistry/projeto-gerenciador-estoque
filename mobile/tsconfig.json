@@ -5,13 +5,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
+    "lib": ["ES2020"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
       "@constants/*": ["src/constants/*"],
-      "@types/*": ["src/types/*"]
-    }
-  }
+      "@types/*": ["src/types/*"],
+    },
+  },
 }
