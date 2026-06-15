@@ -1,0 +1,287 @@
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  RefreshControl,
+  StatusBar,
+  Animated,
+  Pressable,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
+import { SearchBar } from '../../components/SearchBar';
+import { ReagenteCard } from '../../components/ReagenteCard';
+import { MOCK_REAGENTES } from '../../data/mockData';
+import { isLowStock } from '../../utils/formatters';
+import type { Reagente, Tab2StackParamList } from '../../types';
+
+type ReagentesNavProp = NativeStackNavigationProp<Tab2StackParamList, 'Reagentes'>;
+
+type FilterTab = 'all' | 'lowstock';
+
+const FILTER_TABS: { key: FilterTab; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'lowstock', label: '⚠ Estoque Baixo' },
+];
+
+export const ReagentesScreen: React.FC = () => {
+  const navigation = useNavigation<ReagentesNavProp>();
+
+  const [reagentes, setReagentes] = useState<Reagente[]>(MOCK_REAGENTES);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
+
+  const displayedReagentes = useMemo(() => {
+    let list = reagentes;
+
+    if (searchQuery.trim().length > 0) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(r => r.nome.toLowerCase().includes(q));
+    }
+
+    if (activeFilter === 'lowstock') {
+      list = list.filter(r => isLowStock(r.quantidade));
+    }
+
+    return list;
+  }, [reagentes, searchQuery, activeFilter]);
+
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+
+    if (text.trim().length > 1) {
+    } else if (text.trim().length === 0) {
+      setReagentes(MOCK_REAGENTES);
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setReagentes(MOCK_REAGENTES);
+    setRefreshing(false);
+  }, []);
+
+  const handleCardPress = useCallback(
+    (reagenteId: number) => {
+      navigation.navigate('ReagenteDetail', { reagenteId });
+    },
+    [navigation],
+  );
+
+  const renderHeader = useCallback(
+    () => (
+      <View>
+        <View style={styles.filterRow}>
+          {FILTER_TABS.map(tab => (
+            <Pressable
+              key={tab.key}
+              onPress={() => setActiveFilter(tab.key)}
+              hitSlop={4}
+              style={[
+                styles.filterTab,
+                activeFilter === tab.key && styles.filterTabActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.filterTabText,
+                  activeFilter === tab.key && styles.filterTabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.resultCount}>
+          {displayedReagentes.length} reagente{displayedReagentes.length !== 1 ? 's' : ''}
+          {activeFilter === 'lowstock' ? ' com estoque baixo' : ' encontrado' + (displayedReagentes.length !== 1 ? 's' : '')}
+        </Text>
+      </View>
+    ),
+    [activeFilter, displayedReagentes.length],
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyIcon}>🔎</Text>
+      <Text style={styles.emptyTitle}>Nenhum reagente encontrado</Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery.length > 0
+          ? `Nenhum resultado para "${searchQuery}"`
+          : 'Não há reagentes com estoque baixo no momento'}
+      </Text>
+    </View>
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Reagente }) => (
+      <ReagenteCard reagente={item} onPress={() => handleCardPress(item.id)} />
+    ),
+    [handleCardPress],
+  );
+
+  const keyExtractor = useCallback((item: Reagente) => String(item.id), []);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+
+      <View style={styles.screenHeader}>
+        <Pressable
+          onPress={() => navigation.navigate('Dashboard')}
+          style={styles.backRow}
+          hitSlop={8}
+        >
+          <Text style={styles.backArrow}>←</Text>
+          <Text style={styles.backText}>Painel</Text>
+        </Pressable>
+
+        <Text style={styles.screenTitle}>Reagentes</Text>
+        <Text style={styles.screenSubtitle}>Gestão de estoque químico</Text>
+      </View>
+
+      <SearchBar
+        value={searchQuery}
+        onChangeText={handleSearchChange}
+        isLoading={isSearchLoading}
+        placeholder="Buscar por nome do reagente..."
+      />
+
+      <FlatList
+        data={displayedReagentes}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.cyan}
+            colors={[Colors.cyan]}
+          />
+        }
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+
+  screenHeader: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  screenTitle: {
+    fontSize: Typography.size['3xl'],
+    fontWeight: Typography.weight.extrabold,
+    color: Colors.textPrimary,
+    letterSpacing: -0.5,
+  },
+  screenSubtitle: {
+    fontSize: Typography.size.sm,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  backArrow: {
+    fontSize: Typography.size.lg,
+    color: Colors.cyan,
+    fontWeight: Typography.weight.bold,
+  },
+  backText: {
+    fontSize: Typography.size.sm,
+    color: Colors.cyan,
+    fontWeight: Typography.weight.semibold,
+  },
+
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  filterTab: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  filterTabActive: {
+    backgroundColor: Colors.cyanDim,
+    borderColor: Colors.cyan,
+  },
+  filterTabText: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+    color: Colors.textSecondary,
+  },
+  filterTabTextActive: {
+    color: Colors.cyan,
+    fontWeight: Typography.weight.semibold,
+  },
+
+  resultCount: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.sm,
+    fontSize: Typography.size.xs,
+    color: Colors.textMuted,
+    fontWeight: Typography.weight.medium,
+  },
+
+  listContent: {
+    paddingBottom: Spacing['5xl'],
+  },
+
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: Spacing['5xl'],
+    paddingHorizontal: Spacing['3xl'],
+    gap: Spacing.md,
+  },
+  emptyIcon: {
+    fontSize: 52,
+  },
+  emptyTitle: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: Typography.size.md,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+});

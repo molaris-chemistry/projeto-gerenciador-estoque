@@ -1,0 +1,6 @@
+com\reagentes\controller\MateriaController.class
+com\reagentes\dto\MateriaDTO.class
+com\reagentes\model\Materia.class
+com\reagentes\repository\MateriaRepository.class
+com\reagentes\ReagentesApiApplication.class
+com\reagentes\service\MateriaService.class
