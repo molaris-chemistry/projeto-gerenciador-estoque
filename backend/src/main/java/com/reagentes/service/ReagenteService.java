@@ -1,6 +1,7 @@
 package com.reagentes.service;
 
 import com.reagentes.model.Reagente;
+import com.reagentes.model.TipoMovimentacao;
 import com.reagentes.repository.ReagenteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,13 +56,13 @@ public class ReagenteService {
     }
 
     @Transactional
-    public void updateQuantidade(Long reagenteId, BigDecimal quantidadeAlteracao, String tipoMovimentacao) {
+    public void updateQuantidade(Long reagenteId, BigDecimal quantidadeAlteracao, TipoMovimentacao tipo) {
         Reagente reagente = reagenteRepository.findById(reagenteId)
                 .orElseThrow(() -> new RuntimeException("Reagente não encontrado com id " + reagenteId));
 
-        if ("ENTRADA".equals(tipoMovimentacao)) {
+        if (tipo == TipoMovimentacao.ENTRADA) {
             reagente.setQuantidade(reagente.getQuantidade().add(quantidadeAlteracao));
-        } else if ("RETIRADA".equals(tipoMovimentacao)) {
+        } else if (tipo == TipoMovimentacao.RETIRADA) {
             if (reagente.getQuantidade().compareTo(quantidadeAlteracao) < 0) {
                 throw new RuntimeException("Estoque insuficiente para a retirada de " + reagente.getNome());
             }
