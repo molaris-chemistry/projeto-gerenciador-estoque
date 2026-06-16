@@ -1,15 +1,15 @@
 package com.reagentes.infra.security;
 
 import java.io.IOException;
-import java.util.Collection;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.reagentes.service.auth.JWTService;
 
@@ -25,29 +25,31 @@ public class SecurityFilter extends OncePerRequestFilter {
 
   private final JWTService jwtService;
 
-  private final static String AUTH_HEADER = "Authorization";
-  private final static String TOKEN_PREFIX = "Bearer ";
-  
+  private static final String AUTH_HEADER = "Authorization";
+  private static final String TOKEN_PREFIX = "Bearer ";
+
   @Override
   protected void doFilterInternal(
     HttpServletRequest request,
     HttpServletResponse response,
     FilterChain filterChain
   ) throws ServletException, IOException {
-    var token = this.recoverToken(request);
+    var token = recoverToken(request);
 
     if (token != null) {
-      UserDetails userDetails = jwtService.extractUser(token);
-      boolean isTokenExpired = jwtService.isTokenExpired(token);
-
-      if (isTokenExpired) {
-          throw new TokenExpiredException("Token expired", jwtService.getTokenExpirationDate(token));
+      try {
+        UserDetails userDetails = jwtService.extractUser(token);
+        var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      } catch (TokenExpiredException e) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Token expirado");
+        return;
+      } catch (JWTVerificationException | UsernameNotFoundException e) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Token inválido");
+        return;
       }
-
-      Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-
-      var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-      SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     filterChain.doFilter(request, response);
@@ -56,10 +58,10 @@ public class SecurityFilter extends OncePerRequestFilter {
   private String recoverToken(HttpServletRequest request) {
     var authHeader = request.getHeader(AUTH_HEADER);
 
-    if (authHeader == null) {
+    if (authHeader == null || !authHeader.startsWith(TOKEN_PREFIX)) {
       return null;
     }
 
-    return authHeader.replace(TOKEN_PREFIX, "");
+    return authHeader.substring(TOKEN_PREFIX.length());
   }
 }
