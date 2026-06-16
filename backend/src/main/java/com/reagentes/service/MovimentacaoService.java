@@ -1,10 +1,9 @@
 package com.reagentes.service;
 
 import com.reagentes.dto.MovimentacaoDTO;
-import com.reagentes.model.Materia;
 import com.reagentes.model.Movimentacao;
 import com.reagentes.model.Reagente;
-import com.reagentes.model.Turma;
+import com.reagentes.model.TipoMovimentacao;
 import com.reagentes.repository.MateriaRepository;
 import com.reagentes.repository.MovimentacaoRepository;
 import com.reagentes.repository.ReagenteRepository;
@@ -35,11 +34,18 @@ public class MovimentacaoService {
     @Autowired
     private TurmaRepository turmaRepository;
 
-    @Autowired
-    private MateriaService materiaService;
-
     public List<Movimentacao> findAll() {
         return movimentacaoRepository.findAllWithDetailsOrderByDataDesc();
+    }
+
+    public List<Movimentacao> findFiltered(
+            Long reagenteId,
+            Long turmaId,
+            Long materiaId,
+            TipoMovimentacao tipo,
+            LocalDateTime de,
+            LocalDateTime ate) {
+        return movimentacaoRepository.findWithFilters(reagenteId, turmaId, materiaId, tipo, de, ate);
     }
 
     public Optional<Movimentacao> findById(Long id) {
@@ -48,13 +54,13 @@ public class MovimentacaoService {
 
     @Transactional
     public Movimentacao save(MovimentacaoDTO dto) {
-        Reagente reagente = reagenteRepository.findById(dto.getReagenteId())
+        var reagente = reagenteRepository.findById(dto.getReagenteId())
                 .orElseThrow(() -> new RuntimeException("Reagente não encontrado com id: " + dto.getReagenteId()));
 
-        Materia materia = materiaRepository.findById(dto.getMateriaId())
+        var materia = materiaRepository.findById(dto.getMateriaId())
                 .orElseThrow(() -> new RuntimeException("Matéria não encontrada com id: " + dto.getMateriaId()));
 
-        Turma turma = turmaRepository.findById(dto.getTurmaId())
+        var turma = turmaRepository.findById(dto.getTurmaId())
                 .orElseThrow(() -> new RuntimeException("Turma não encontrada com id: " + dto.getTurmaId()));
 
         Movimentacao movimentacao = new Movimentacao();
@@ -65,11 +71,7 @@ public class MovimentacaoService {
         movimentacao.setMateria(materia);
         movimentacao.setTurma(turma);
 
-        reagenteService.updateQuantidade(
-                movimentacao.getReagente().getId(),
-                movimentacao.getQuantidade(),
-                movimentacao.getTipo()
-        );
+        reagenteService.updateQuantidade(reagente.getId(), movimentacao.getQuantidade(), movimentacao.getTipo());
 
         Movimentacao saved = movimentacaoRepository.save(movimentacao);
         return movimentacaoRepository.findByIdWithDetails(saved.getId()).orElse(saved);
@@ -84,10 +86,11 @@ public class MovimentacaoService {
             throw new RuntimeException("Dados de reagente inconsistentes na movimentação. Não é possível reverter o estoque.");
         }
 
-        String tipoReverso = movimentacao.getTipo().equals("ENTRADA") ? "RETIRADA" : "ENTRADA";
-        reagenteService.updateQuantidade(movimentacao.getReagente().getId(),
-                movimentacao.getQuantidade(),
-                tipoReverso);
+        TipoMovimentacao tipoReverso = movimentacao.getTipo() == TipoMovimentacao.ENTRADA
+                ? TipoMovimentacao.RETIRADA
+                : TipoMovimentacao.ENTRADA;
+
+        reagenteService.updateQuantidade(movimentacao.getReagente().getId(), movimentacao.getQuantidade(), tipoReverso);
         movimentacaoRepository.deleteById(id);
     }
 
@@ -95,32 +98,7 @@ public class MovimentacaoService {
         return movimentacaoRepository.findByReagenteOrderByDataDesc(reagente);
     }
 
-    public List<Movimentacao> findByTipo(String tipo) {
+    public List<Movimentacao> findByTipo(TipoMovimentacao tipo) {
         return movimentacaoRepository.findByTipoOrderByDataDesc(tipo);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Movimentacao> findByTurma(Long turmaId) {
-        Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> new RuntimeException("Turma não encontrada com id: " + turmaId));
-        return movimentacaoRepository.findByTurmaOrderByDataDesc(turma);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Movimentacao> findByNomeDaTurma(String nomeTurma) {
-        return movimentacaoRepository.findByTurmaNomeOrderByDataDesc(nomeTurma);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Movimentacao> findByMateria(String nomeMateria) {
-        Optional<Materia> materiaOpt = materiaService.findByNome(nomeMateria);
-        if (materiaOpt.isEmpty()) {
-            return List.of();
-        }
-        return movimentacaoRepository.findByMateriaOrderByDataDesc(materiaOpt.get());
-    }
-
-    public List<Movimentacao> findByDataBetween(LocalDateTime inicio, LocalDateTime fim) {
-        return movimentacaoRepository.findByDataBetween(inicio, fim);
     }
 }

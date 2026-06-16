@@ -2,13 +2,16 @@ package com.reagentes.controller;
 
 import com.reagentes.dto.MovimentacaoDTO;
 import com.reagentes.model.Movimentacao;
+import com.reagentes.model.TipoMovimentacao;
 import com.reagentes.service.MovimentacaoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +25,25 @@ public class MovimentacaoController {
     private MovimentacaoService movimentacaoService;
 
     @GetMapping
-    public ResponseEntity<List<MovimentacaoDTO>> getAllMovimentacoes() {
+    public ResponseEntity<List<MovimentacaoDTO>> getAllMovimentacoes(
+            @RequestParam(required = false) Long reagenteId,
+            @RequestParam(required = false) Long turmaId,
+            @RequestParam(required = false) Long materiaId,
+            @RequestParam(required = false) TipoMovimentacao tipo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime ate) {
         try {
-            List<MovimentacaoDTO> movimentacaoDTOs = movimentacaoService.findAll().stream()
+            boolean hasFilters = reagenteId != null || turmaId != null || materiaId != null
+                    || tipo != null || de != null || ate != null;
+
+            List<MovimentacaoDTO> dtos = (hasFilters
+                    ? movimentacaoService.findFiltered(reagenteId, turmaId, materiaId, tipo, de, ate)
+                    : movimentacaoService.findAll())
+                    .stream()
                     .map(this::convertToDto)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(movimentacaoDTOs);
+
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -48,8 +64,8 @@ public class MovimentacaoController {
     @PostMapping
     public ResponseEntity<?> createMovimentacao(@Valid @RequestBody MovimentacaoDTO movimentacaoDTO) {
         try {
-            Movimentacao savedMovimentacao = movimentacaoService.save(movimentacaoDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(savedMovimentacao));
+            Movimentacao saved = movimentacaoService.save(movimentacaoDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(saved));
         } catch (RuntimeException e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage() != null ? e.getMessage() : "Erro ao processar movimentação");
@@ -72,19 +88,14 @@ public class MovimentacaoController {
     }
 
     private MovimentacaoDTO convertToDto(Movimentacao movimentacao) {
-        Long materiaId = movimentacao.getMateria() != null ? movimentacao.getMateria().getId() : null;
-        Long turmaId = movimentacao.getTurma() != null ? movimentacao.getTurma().getId() : null;
-        Long reagenteId = movimentacao.getReagente() != null ? movimentacao.getReagente().getId() : null;
-
         MovimentacaoDTO dto = new MovimentacaoDTO(
                 movimentacao.getId(),
                 movimentacao.getTipo(),
-                reagenteId,
+                movimentacao.getReagente() != null ? movimentacao.getReagente().getId() : null,
                 movimentacao.getQuantidade(),
-                materiaId,
-                turmaId,
-                movimentacao.getData()
-        );
+                movimentacao.getMateria() != null ? movimentacao.getMateria().getId() : null,
+                movimentacao.getTurma() != null ? movimentacao.getTurma().getId() : null,
+                movimentacao.getData());
 
         if (movimentacao.getReagente() != null) {
             dto.setReagenteNome(movimentacao.getReagente().getNome());
