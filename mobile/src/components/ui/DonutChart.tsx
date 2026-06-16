@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, { Circle, G, Text as SvgText } from 'react-native-svg';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius } from "@/constants/theme";
 
 export interface DonutChartDataPoint {
   label: string;

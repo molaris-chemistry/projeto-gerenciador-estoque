@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius } from "@/constants/theme";
 
 export interface BarChartDataPoint {
   label: string;

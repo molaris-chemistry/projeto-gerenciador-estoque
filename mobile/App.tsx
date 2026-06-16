@@ -1,29 +1,8 @@
 /**
- * App.tsx — Root entry point
+ * App.tsx — Legacy entry point (not used by Expo Router)
  *
- * Wraps the entire app in NavigationContainer and renders the
- * Instagram-style TabNavigator. Tab 2 (🧪 Estoque) hosts the full
- * inventory management UI: Dashboard → Reagentes → ReagenteDetail.
+ * Expo Router uses app/_layout.tsx as the entry point.
+ * This file is kept for backward compatibility only.
  */
 
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-// enableScreens() must be called before any navigator renders
-// to activate native screen components from react-native-screens
-import { enableScreens } from 'react-native-screens';
-import { TabNavigator } from './src/navigation/TabNavigator';
-
-enableScreens();
-
-export default function App() {
-  return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <TabNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
-  );
-}
+import 'expo-router/entry';

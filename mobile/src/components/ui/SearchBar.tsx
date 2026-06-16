@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius } from "@/constants/theme";
 
 interface SearchBarProps {
   value: string;
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textPrimary,
     fontWeight: Typography.weight.medium,
     paddingVertical: 0,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,21 +6,17 @@ import {
   StyleSheet,
   RefreshControl,
   StatusBar,
-  Animated,
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 
-import { Colors, Typography, Spacing, Radius } from '../../constants/theme';
-import { SearchBar } from '../../components/SearchBar';
-import { ReagenteCard } from '../../components/ReagenteCard';
-import { MOCK_REAGENTES } from '../../data/mockData';
-import { isLowStock } from '../../utils/formatters';
-import type { Reagente, Tab2StackParamList } from '../../types';
-
-type ReagentesNavProp = NativeStackNavigationProp<Tab2StackParamList, 'Reagentes'>;
+import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { SearchBar } from '@/components/ui';
+import { ReagenteCard } from '@/components';
+import { MOCK_REAGENTES } from '@/data/mockData';
+import { isLowStock } from '@/utils/formatters';
+import type { Reagente } from '@/types';
 
 type FilterTab = 'all' | 'lowstock';
 
@@ -29,8 +25,8 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'lowstock', label: '⚠ Estoque Baixo' },
 ];
 
-export const ReagentesScreen: React.FC = () => {
-  const navigation = useNavigation<ReagentesNavProp>();
+export default function CatalogoScreen() {
+  const router = useRouter();
 
   const [reagentes, setReagentes] = useState<Reagente[]>(MOCK_REAGENTES);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,9 +67,9 @@ export const ReagentesScreen: React.FC = () => {
 
   const handleCardPress = useCallback(
     (reagenteId: number) => {
-      navigation.navigate('ReagenteDetail', { reagenteId });
+      router.push(`/reagente/${reagenteId}`);
     },
-    [navigation],
+    [router],
   );
 
   const renderHeader = useCallback(
@@ -137,16 +133,7 @@ export const ReagentesScreen: React.FC = () => {
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
 
       <View style={styles.screenHeader}>
-        <Pressable
-          onPress={() => navigation.navigate('Dashboard')}
-          style={styles.backRow}
-          hitSlop={8}
-        >
-          <Text style={styles.backArrow}>←</Text>
-          <Text style={styles.backText}>Painel</Text>
-        </Pressable>
-
-        <Text style={styles.screenTitle}>Reagentes</Text>
+        <Text style={styles.screenTitle}>Catálogo</Text>
         <Text style={styles.screenSubtitle}>Gestão de estoque químico</Text>
       </View>
 
@@ -180,7 +167,7 @@ export const ReagentesScreen: React.FC = () => {
       />
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   safe: {
@@ -194,7 +181,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   screenTitle: {
-    fontSize: Typography.size['3xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,
@@ -203,23 +190,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     color: Colors.textMuted,
     marginTop: 2,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  backArrow: {
-    fontSize: Typography.size.lg,
-    color: Colors.cyan,
-    fontWeight: Typography.weight.bold,
-  },
-  backText: {
-    fontSize: Typography.size.sm,
-    color: Colors.cyan,
-    fontWeight: Typography.weight.semibold,
   },
 
   filterRow: {
@@ -260,13 +230,13 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingBottom: Spacing['5xl'],
+    paddingBottom: Spacing.xxxxxl,
   },
 
   emptyState: {
     alignItems: 'center',
-    paddingTop: Spacing['5xl'],
-    paddingHorizontal: Spacing['3xl'],
+    paddingTop: Spacing.xxxxxl,
+    paddingHorizontal: Spacing.xxxl,
     gap: Spacing.md,
   },
   emptyIcon: {
@@ -279,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textMuted,
     textAlign: 'center',
     lineHeight: 22,

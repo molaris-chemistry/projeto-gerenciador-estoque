@@ -9,22 +9,15 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 
-import { Colors, Typography, Spacing, Radius, Shadow } from '../../constants/theme';
-import { StatCard } from '../../components/StatCard';
-import { BarChart } from '../../components/BarChart';
-import { DonutChart } from '../../components/DonutChart';
-import { TimelineItem } from '../../components/TimelineItem';
+import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
+import { StatCard, BarChart, DonutChart, TimelineItem } from "@/components/ui";
 import {
   MOCK_REAGENTES,
   MOCK_MOVIMENTACOES,
   MOCK_DASHBOARD_STATS,
-} from '../../data/mockData';
-import type { Tab2StackParamList } from '../../types';
-
-type DashboardNavProp = NativeStackNavigationProp<Tab2StackParamList, 'Dashboard'>;
+} from '@/data/mockData';
 
 function getTopReagentesChartData() {
   return [...MOCK_REAGENTES]
@@ -41,7 +34,8 @@ function getTopReagentesChartData() {
 function getMovimentacoesByMateriaChartData() {
   const counts: Record<string, number> = {};
   MOCK_MOVIMENTACOES.forEach(m => {
-    counts[m.materia] = (counts[m.materia] ?? 0) + 1;
+    const key = m.materia || 'Outros';
+    counts[key] = (counts[key] ?? 0) + 1;
   });
   return Object.entries(counts).map(([label, value], i) => ({
     label,
@@ -50,13 +44,12 @@ function getMovimentacoesByMateriaChartData() {
   }));
 }
 
-export const DashboardScreen: React.FC = () => {
-  const navigation = useNavigation<DashboardNavProp>();
+export default function RelatoriosScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-
     await new Promise(resolve => setTimeout(resolve, 1200));
     setRefreshing(false);
   }, []);
@@ -154,7 +147,7 @@ export const DashboardScreen: React.FC = () => {
               <View style={[styles.sectionAccent, { backgroundColor: Colors.cyan }]} />
               <Text style={styles.sectionTitle}>Visão do Estoque</Text>
             </View>
-            <Pressable onPress={() => navigation.navigate('Reagentes')} hitSlop={8}>
+            <Pressable onPress={() => router.push('/')} hitSlop={8}>
               <Text style={styles.sectionLink}>Ver todos →</Text>
             </Pressable>
           </View>
@@ -201,7 +194,7 @@ export const DashboardScreen: React.FC = () => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   safe: {
@@ -212,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: Spacing['5xl'],
+    paddingBottom: Spacing.xxxxxl,
   },
 
   header: {
@@ -230,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: Typography.size['3xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,
@@ -327,7 +320,7 @@ const styles = StyleSheet.create({
   },
   donutCard: {
     alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
+    paddingVertical: Spacing.xxl,
   },
   timelineCard: {
     backgroundColor: Colors.surfaceElevated,
@@ -339,6 +332,6 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    height: Spacing['2xl'],
+    height: Spacing.xxl,
   },
 });

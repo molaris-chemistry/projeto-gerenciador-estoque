@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Pressable } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow } from "@/constants/theme";
 
 interface StatCardProps {
   icon: string;
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   value: {
-    fontSize: Typography.size['2xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     marginBottom: 2,
