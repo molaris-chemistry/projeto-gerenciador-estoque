@@ -8,11 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ReagenteService {
+
+    private static final int DIAS_ANTECEDENCIA_VENCIMENTO = 30;
 
     @Autowired
     private ReagenteRepository reagenteRepository;
@@ -46,6 +49,8 @@ public class ReagenteService {
         reagente.setNome(reagenteDetails.getNome());
         reagente.setQuantidade(reagenteDetails.getQuantidade());
         reagente.setUnidade(reagenteDetails.getUnidade());
+        reagente.setDataValidade(reagenteDetails.getDataValidade());
+        reagente.setQuantidadeMinima(reagenteDetails.getQuantidadeMinima());
 
         return reagenteRepository.save(reagente);
     }
@@ -73,6 +78,15 @@ public class ReagenteService {
 
     public boolean existsByNome(String nome) {
         return reagenteRepository.existsByNomeIgnoreCase(nome);
+    }
+
+    public List<Reagente> findReagentesVencendo() {
+        LocalDate limite = LocalDate.now().plusDays(DIAS_ANTECEDENCIA_VENCIMENTO);
+        return reagenteRepository.findByDataValidadeLessThanEqualAndDataValidadeIsNotNullOrderByDataValidadeAsc(limite);
+    }
+
+    public List<Reagente> findReagentesComEstoqueMinimo() {
+        return reagenteRepository.findByQuantidadeLessThanEqualQuantidadeMinimaAndQuantidadeMinimaIsNotNullOrderByNomeAsc();
     }
 }
 

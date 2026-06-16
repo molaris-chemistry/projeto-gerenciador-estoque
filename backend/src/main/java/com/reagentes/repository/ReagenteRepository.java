@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,10 @@ public interface ReagenteRepository extends JpaRepository<Reagente, Long> {
     boolean existsByNomeIgnoreCase(String nome);
 
     List<Reagente> findAllByOrderByNomeAsc();
+
+    List<Reagente> findByDataValidadeLessThanEqualAndDataValidadeIsNotNullOrderByDataValidadeAsc(LocalDate data);
+
+    List<Reagente> findByQuantidadeLessThanEqualQuantidadeMinimaAndQuantidadeMinimaIsNotNullOrderByNomeAsc();
 
     @Query("SELECT r FROM Reagente r WHERE r.quantidade < :limite")
     List<Reagente> findReagentesComEstoqueBaixo(@Param("limite") Double limite);
