@@ -26,3 +26,8 @@ logging:
     com.reagentes: DEBUG
     org.springframework.web: DEBUG
     org.springframework.context: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET:my-secret-key}
+  issuer: ${JWT_ISSUER:project}
+  expiration-time-in-days: ${JWT_EXPIRATION_TIME_IN_DAYS:7}
