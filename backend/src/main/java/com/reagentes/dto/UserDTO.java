@@ -6,7 +6,7 @@ import com.reagentes.model.user.User;
 import com.reagentes.model.user.UserRole;
 
 public record UserDTO(
-  String id,
+  Long id,
   String name,
   String email,
   UserRole role,

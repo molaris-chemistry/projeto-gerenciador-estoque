@@ -31,6 +31,13 @@ public class SecurityConfiguration {
       )
       .authorizeHttpRequests(auth -> auth
         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/reagentes/**").authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/reagentes").hasRole("PROFESSOR")
+        .requestMatchers(HttpMethod.PUT, "/api/reagentes/**").hasRole("PROFESSOR")
+        .requestMatchers(HttpMethod.DELETE, "/api/reagentes/**").hasRole("PROFESSOR")
+        .requestMatchers(HttpMethod.GET, "/api/movimentacoes/**").authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/movimentacoes").hasRole("PROFESSOR")
+        .requestMatchers(HttpMethod.DELETE, "/api/movimentacoes/**").hasRole("PROFESSOR")
         .anyRequest().authenticated()
       )
       .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

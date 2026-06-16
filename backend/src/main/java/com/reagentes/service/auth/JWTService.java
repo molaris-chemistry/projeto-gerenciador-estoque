@@ -43,7 +43,7 @@ public class JWTService {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
-        .withIssuer(secret)
+        .withIssuer(issuer)
         .withSubject(userDetails.getUsername())
         .withClaim("type", ACCESS_TOKEN_TYPE)
         .withExpiresAt(generateExpirationDate())

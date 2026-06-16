@@ -34,7 +34,7 @@ public class User implements UserDetails {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private String id;
+  private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -61,7 +61,7 @@ public class User implements UserDetails {
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     if (this.role == UserRole.PROFESSOR) {
-      return List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"), new SimpleGrantedAuthority("ALUNO"));
+      return List.of(new SimpleGrantedAuthority("ROLE_PROFESSOR"), new SimpleGrantedAuthority("ROLE_ALUNO"));
     } else {
       return List.of(new SimpleGrantedAuthority("ROLE_ALUNO"));
     }
