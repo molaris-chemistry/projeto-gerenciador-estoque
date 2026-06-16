@@ -54,7 +54,7 @@ export default function ReagenteDetailScreen() {
     .filter(m => m.tipo === 'ENTRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
   const totalSaidas = movimentacoes
-    .filter(m => m.tipo === 'SAIDA' || m.tipo === 'RETIRADA')
+    .filter(m => m.tipo === 'RETIRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
 
   if (loading) {
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    paddingBottom: Spacing['5xl'],
+    paddingBottom: Spacing.xxxxxl,
   },
 
   loadingContainer: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   loadingText: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textSecondary,
   },
   errorIcon: {
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: Colors.cyan,
     fontWeight: Typography.weight.semibold,
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
   },
 
   backRow: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   backText: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.cyan,
     fontWeight: Typography.weight.semibold,
   },
@@ -310,14 +310,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   heroUnit: {
-    fontSize: Typography.size['2xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   heroInfo: {
     gap: Spacing.sm,
   },
   heroName: {
-    fontSize: Typography.size['2xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   quantityValue: {
-    fontSize: Typography.size['4xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -1,
   },
@@ -388,19 +388,19 @@ const styles = StyleSheet.create({
   },
   noMovs: {
     alignItems: 'center',
-    padding: Spacing['3xl'],
+    padding: Spacing.xxxl,
     gap: Spacing.md,
   },
   noMovsIcon: {
     fontSize: 40,
   },
   noMovsText: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textMuted,
     textAlign: 'center',
   },
 
   footer: {
-    height: Spacing['2xl'],
+    height: Spacing.xxl,
   },
 });

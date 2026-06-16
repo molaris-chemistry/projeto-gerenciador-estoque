@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   emptyText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 24,

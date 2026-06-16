@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   screenTitle: {
-    fontSize: Typography.size['3xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingBottom: Spacing['5xl'],
+    paddingBottom: Spacing.xxxxxl,
   },
 
   emptyState: {
     alignItems: 'center',
-    paddingTop: Spacing['5xl'],
-    paddingHorizontal: Spacing['3xl'],
+    paddingTop: Spacing.xxxxxl,
+    paddingHorizontal: Spacing.xxxl,
     gap: Spacing.md,
   },
   emptyIcon: {
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textMuted,
     textAlign: 'center',
     lineHeight: 22,

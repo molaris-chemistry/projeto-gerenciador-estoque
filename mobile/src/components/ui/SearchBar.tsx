@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     color: Colors.textPrimary,
     fontWeight: Typography.weight.medium,
     paddingVertical: 0,

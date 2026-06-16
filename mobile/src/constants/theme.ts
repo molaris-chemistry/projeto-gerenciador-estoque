@@ -70,15 +70,12 @@ export const Typography = {
   },
 
   size: {
-    xs: 11,
-    sm: 13,
-    md: 15,
+    xs: 12,
+    sm: 14,
     base: 16,
-    lg: 17,
+    lg: 18,
     xl: 20,
-    '2xl': 24,
-    '3xl': 30,
-    '4xl': 38,
+    xxl: 24,
   },
 
   weight: {
@@ -102,10 +99,10 @@ export const Spacing = {
   md: 12,
   lg: 16,
   xl: 20,
-  '2xl': 24,
-  '3xl': 32,
-  '4xl': 40,
-  '5xl': 56,
+  xxl: 24,
+  xxxl: 32,
+  xxxxl: 40,
+  xxxxxl: 56,
 } as const;
 
 export const Radius = {

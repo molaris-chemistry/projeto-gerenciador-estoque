@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   nome: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
     color: Colors.textPrimary,
     lineHeight: 20,

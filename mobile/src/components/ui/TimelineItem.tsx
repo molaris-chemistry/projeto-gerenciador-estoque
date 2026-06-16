@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   quantidade: {
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.sm,
     fontWeight: Typography.weight.extrabold,
   },
   reagenteName: {

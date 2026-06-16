@@ -11,12 +11,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Card } from "@/components/ui";
 import {
-  BorderRadius,
+  Radius as BorderRadius,
   Colors,
-  FontSize,
-  FontWeight,
   Spacing,
-} from "@/constants/Colors";
+  Typography,
+} from "@/constants/theme";
+
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 import { useDashboard } from "@/contexts/DashboardContext";
 import type { Reagente } from "@/types";
 
@@ -135,7 +137,7 @@ export default function DashboardScreen() {
               icon="swap-horizontal"
               label="Movimentações hoje"
               value={movimentacoesHoje}
-              color={Colors.accent}
+              color={Colors.cyan}
             />
             <StatCard
               icon="warning"
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
@@ -324,7 +326,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxxl,
   },
   emptyText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: "center",
   },

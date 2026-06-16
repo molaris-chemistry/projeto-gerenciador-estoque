@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: Spacing['5xl'],
+    paddingBottom: Spacing.xxxxxl,
   },
 
   header: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: Typography.size['3xl'],
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   donutCard: {
     alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
+    paddingVertical: Spacing.xxl,
   },
   timelineCard: {
     backgroundColor: Colors.surfaceElevated,
@@ -332,6 +332,6 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    height: Spacing['2xl'],
+    height: Spacing.xxl,
   },
 });
