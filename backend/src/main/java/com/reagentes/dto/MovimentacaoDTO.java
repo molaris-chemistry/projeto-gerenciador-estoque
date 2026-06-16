@@ -1,6 +1,6 @@
 package com.reagentes.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.reagentes.model.TipoMovimentacao;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 public class MovimentacaoDTO {
     private Long id;
 
-    @NotBlank(message = "Tipo é obrigatório")
-    private String tipo;
+    @NotNull(message = "Tipo é obrigatório")
+    private TipoMovimentacao tipo;
 
     @NotNull(message = "ID do reagente é obrigatório")
     private Long reagenteId;
@@ -35,7 +35,7 @@ public class MovimentacaoDTO {
 
     public MovimentacaoDTO() {}
 
-    public MovimentacaoDTO(Long id, String tipo, Long reagenteId, BigDecimal quantidade,
+    public MovimentacaoDTO(Long id, TipoMovimentacao tipo, Long reagenteId, BigDecimal quantidade,
                            Long materiaId, Long turmaId, LocalDateTime data) {
         this.id = id;
         this.tipo = tipo;
@@ -46,104 +46,36 @@ public class MovimentacaoDTO {
         this.data = data;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public TipoMovimentacao getTipo() { return tipo; }
+    public void setTipo(TipoMovimentacao tipo) { this.tipo = tipo; }
 
-    public String getTipo() {
-        return tipo;
-    }
+    public Long getReagenteId() { return reagenteId; }
+    public void setReagenteId(Long reagenteId) { this.reagenteId = reagenteId; }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
+    public BigDecimal getQuantidade() { return quantidade; }
+    public void setQuantidade(BigDecimal quantidade) { this.quantidade = quantidade; }
 
-    public Long getReagenteId() {
-        return reagenteId;
-    }
+    public Long getMateriaId() { return materiaId; }
+    public void setMateriaId(Long materiaId) { this.materiaId = materiaId; }
 
-    public void setReagenteId(Long reagenteId) {
-        this.reagenteId = reagenteId;
-    }
+    public Long getTurmaId() { return turmaId; }
+    public void setTurmaId(Long turmaId) { this.turmaId = turmaId; }
 
-    public BigDecimal getQuantidade() {
-        return quantidade;
-    }
+    public LocalDateTime getData() { return data; }
+    public void setData(LocalDateTime data) { this.data = data; }
 
-    public void setQuantidade(BigDecimal quantidade) {
-        this.quantidade = quantidade;
-    }
+    public String getReagenteNome() { return reagenteNome; }
+    public void setReagenteNome(String reagenteNome) { this.reagenteNome = reagenteNome; }
 
-    public Long getMateriaId() {
-        return materiaId;
-    }
+    public String getMateria() { return materia; }
+    public void setMateria(String materia) { this.materia = materia; }
 
-    public void setMateriaId(Long materiaId) {
-        this.materiaId = materiaId;
-    }
+    public String getTurma() { return turma; }
+    public void setTurma(String turma) { this.turma = turma; }
 
-    public Long getTurmaId() {
-        return turmaId;
-    }
-
-    public void setTurmaId(Long turmaId) {
-        this.turmaId = turmaId;
-    }
-
-    public LocalDateTime getData() {
-        return data;
-    }
-
-    public void setData(LocalDateTime data) {
-        this.data = data;
-    }
-
-    public String getReagenteNome() {
-        return reagenteNome;
-    }
-
-    public void setReagenteNome(String reagenteNome) {
-        this.reagenteNome = reagenteNome;
-    }
-
-    public String getMateria() {
-        return materia;
-    }
-
-    public void setMateria(String materia) {
-        this.materia = materia;
-    }
-
-    public String getTurma() {
-        return turma;
-    }
-
-    public void setTurma(String turma) {
-        this.turma = turma;
-    }
-
-    public String getUnidade() {
-        return unidade;
-    }
-
-    public void setUnidade(String unidade) {
-        this.unidade = unidade;
-    }
-
-    @Override
-    public String toString() {
-        return "MovimentacaoDTO{" +
-                "id=" + id +
-                ", tipo='" + tipo + '\'' +
-                ", reagenteId=" + reagenteId +
-                ", quantidade=" + quantidade +
-                ", materiaId=" + materiaId +
-                ", turmaId=" + turmaId +
-                ", data=" + data +
-                '}';
-    }
+    public String getUnidade() { return unidade; }
+    public void setUnidade(String unidade) { this.unidade = unidade; }
 }

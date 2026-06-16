@@ -6,6 +6,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.reagentes.model.Movimentacao;
 import com.reagentes.model.Reagente;
+import com.reagentes.model.TipoMovimentacao;
 import com.reagentes.repository.MovimentacaoRepository;
 import com.reagentes.repository.ReagenteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,8 +84,8 @@ public class RelatorioService {
             for (Movimentacao mov : movimentacoes) {
                 String nomeReagente = mov.getReagente() != null ? mov.getReagente().getNome() : "N/A";
                 BigDecimal quantidade = mov.getQuantidade() != null ? mov.getQuantidade() : BigDecimal.ZERO;
-                String tipo = mov.getTipo() != null ? mov.getTipo().toUpperCase() : "";
-                BigDecimal signed = "RETIRADA".equals(tipo) ? quantidade.negate() : quantidade;
+                TipoMovimentacao tipo = mov.getTipo();
+                BigDecimal signed = TipoMovimentacao.RETIRADA == tipo ? quantidade.negate() : quantidade;
                 totaisPorReagente.merge(nomeReagente, signed, BigDecimal::add);
             }
 

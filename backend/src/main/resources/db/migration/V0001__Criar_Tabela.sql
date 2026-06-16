@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS turmas (
     nome VARCHAR(10) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
-
 );
 
 CREATE TABLE IF NOT EXISTS movimentacoes (
@@ -28,8 +27,14 @@ CREATE TABLE IF NOT EXISTS movimentacoes (
     tipo ENUM('ENTRADA', 'RETIRADA') NOT NULL,
     reagente_id BIGINT NOT NULL,
     quantidade DECIMAL(10,3) NOT NULL,
+    materia_id BIGINT NOT NULL,
+    turma_id BIGINT NOT NULL,
     data DATETIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (reagente_id) REFERENCES reagentes(id)
+    FOREIGN KEY (reagente_id) REFERENCES reagentes(id),
+    CONSTRAINT fk_movimentacoes_materia FOREIGN KEY (materia_id) REFERENCES materia(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_movimentacoes_turma FOREIGN KEY (turma_id) REFERENCES turmas(id)
+        ON DELETE RESTRICT ON UPDATE CASCADE
 );

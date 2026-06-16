@@ -1,9 +1,8 @@
 package com.reagentes.repository;
 
-import com.reagentes.model.Materia;
 import com.reagentes.model.Movimentacao;
 import com.reagentes.model.Reagente;
-import com.reagentes.model.Turma;
+import com.reagentes.model.TipoMovimentacao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,28 +29,36 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
             "WHERE m.id = :id")
     Optional<Movimentacao> findByIdWithDetails(@Param("id") Long id);
 
+    @Query("SELECT m FROM Movimentacao m " +
+            "JOIN FETCH m.reagente r " +
+            "LEFT JOIN FETCH m.materia ma " +
+            "LEFT JOIN FETCH m.turma t " +
+            "WHERE (:reagenteId IS NULL OR r.id = :reagenteId) " +
+            "AND (:turmaId IS NULL OR t.id = :turmaId) " +
+            "AND (:materiaId IS NULL OR ma.id = :materiaId) " +
+            "AND (:tipo IS NULL OR m.tipo = :tipo) " +
+            "AND (:de IS NULL OR m.data >= :de) " +
+            "AND (:ate IS NULL OR m.data <= :ate) " +
+            "ORDER BY m.data DESC")
+    List<Movimentacao> findWithFilters(
+            @Param("reagenteId") Long reagenteId,
+            @Param("turmaId") Long turmaId,
+            @Param("materiaId") Long materiaId,
+            @Param("tipo") TipoMovimentacao tipo,
+            @Param("de") LocalDateTime de,
+            @Param("ate") LocalDateTime ate);
+
     List<Movimentacao> findByReagenteOrderByDataDesc(Reagente reagente);
 
-    List<Movimentacao> findByTipoOrderByDataDesc(String tipo);
+    List<Movimentacao> findByTipoOrderByDataDesc(TipoMovimentacao tipo);
 
-    List<Movimentacao> findByMateriaOrderByDataDesc(Materia materia);
-
-    List<Movimentacao> findByTurmaOrderByDataDesc(Turma turma);
-
-    @Query("SELECT m FROM Movimentacao m WHERE m.data BETWEEN :inicio AND :fim ORDER BY m.data DESC")
-    List<Movimentacao> findByDataBetween(@Param("inicio") LocalDateTime inicio,
-                                         @Param("fim") LocalDateTime fim);
-
-    @Query("SELECT m FROM Movimentacao m WHERE m.reagente = :reagente AND m.data BETWEEN :inicio AND :fim ORDER BY m.data DESC")
+    @Query("SELECT m FROM Movimentacao m WHERE m.reagente = :reagente AND m.data BETWEEN :de AND :ate ORDER BY m.data DESC")
     List<Movimentacao> findByReagenteAndDataBetween(@Param("reagente") Reagente reagente,
-                                                    @Param("inicio") LocalDateTime inicio,
-                                                    @Param("fim") LocalDateTime fim);
+                                                    @Param("de") LocalDateTime de,
+                                                    @Param("ate") LocalDateTime ate);
 
-    @Query("SELECT COUNT(m) FROM Movimentacao m WHERE m.tipo = :tipo AND m.data BETWEEN :inicio AND :fim")
-    Long countByTipoAndDataBetween(@Param("tipo") String tipo,
-                                   @Param("inicio") LocalDateTime inicio,
-                                   @Param("fim") LocalDateTime fim);
-
-    @Query("SELECT m FROM Movimentacao m JOIN m.turma t WHERE t.nome = :nomeTurma ORDER BY m.data DESC")
-    List<Movimentacao> findByTurmaNomeOrderByDataDesc(@Param("nomeTurma") String nomeTurma);
+    @Query("SELECT COUNT(m) FROM Movimentacao m WHERE m.tipo = :tipo AND m.data BETWEEN :de AND :ate")
+    Long countByTipoAndDataBetween(@Param("tipo") TipoMovimentacao tipo,
+                                   @Param("de") LocalDateTime de,
+                                   @Param("ate") LocalDateTime ate);
 }
