@@ -53,6 +53,13 @@ export const Colors = {
   tabBarBorder: '#1E2235',
   tabBarActive: '#00D4FF',
   tabBarInactive: '#4B5563',
+  // --- Aliases for UI Components ---
+  primary: '#7C3AED',
+  gradientPrimary: ['#7C3AED', '#00D4FF'] as const,
+  border: '#252A40',
+  borderLight: 'rgba(37, 42, 64, 0.5)',
+  textTertiary: '#4B5563',
+  error: '#F43F5E',
 } as const;
 
 export const Typography = {
@@ -66,6 +73,7 @@ export const Typography = {
     xs: 11,
     sm: 13,
     md: 15,
+    base: 16,
     lg: 17,
     xl: 20,
     '2xl': 24,

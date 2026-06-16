@@ -10,28 +10,22 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { Colors, Typography, Spacing, Radius, Shadow } from '../../constants/theme';
-import { AlertBadge } from '../../components/AlertBadge';
-import { TimelineItem } from '../../components/TimelineItem';
-import { MOCK_REAGENTES, getMovimentacoesByReagente } from '../../data/mockData';
+import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
+import { AlertBadge, TimelineItem } from '@/components/ui';
+import { MOCK_REAGENTES, getMovimentacoesByReagente } from '@/data/mockData';
 import {
   formatQuantidade,
   isLowStock,
   isExpiringSoon,
-} from '../../utils/formatters';
-import type { Reagente, Movimentacao, Tab2StackParamList } from '../../types';
+} from '@/utils/formatters';
+import type { Reagente, Movimentacao } from '@/types';
 
-type DetailNavProp = NativeStackNavigationProp<Tab2StackParamList, 'ReagenteDetail'>;
-type DetailRouteProp = RouteProp<Tab2StackParamList, 'ReagenteDetail'>;
-
-export const ReagenteDetailScreen: React.FC = () => {
-  const navigation = useNavigation<DetailNavProp>();
-  const route = useRoute<DetailRouteProp>();
-  const { reagenteId } = route.params;
+export default function ReagenteDetailScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const reagenteId = Number(id);
 
   const [reagente, setReagente] = useState<Reagente | null>(null);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
@@ -60,7 +54,7 @@ export const ReagenteDetailScreen: React.FC = () => {
     .filter(m => m.tipo === 'ENTRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
   const totalSaidas = movimentacoes
-    .filter(m => m.tipo === 'SAIDA')
+    .filter(m => m.tipo === 'SAIDA' || m.tipo === 'RETIRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
 
   if (loading) {
@@ -80,7 +74,7 @@ export const ReagenteDetailScreen: React.FC = () => {
         <View style={styles.loadingContainer}>
           <Text style={styles.errorIcon}>⚗️</Text>
           <Text style={styles.errorTitle}>Reagente não encontrado</Text>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={8}>
+          <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
             <Text style={styles.backButtonText}>← Voltar</Text>
           </Pressable>
         </View>
@@ -109,9 +103,9 @@ export const ReagenteDetailScreen: React.FC = () => {
           />
         }
       >
-        <Pressable onPress={() => navigation.goBack()} style={styles.backRow} hitSlop={4}>
+        <Pressable onPress={() => router.back()} style={styles.backRow} hitSlop={4}>
           <Text style={styles.backArrow}>←</Text>
-          <Text style={styles.backText}>Reagentes</Text>
+          <Text style={styles.backText}>Catálogo</Text>
         </Pressable>
 
         <View style={styles.hero}>
@@ -199,7 +193,7 @@ export const ReagenteDetailScreen: React.FC = () => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 interface InfoTileProps {
   icon: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius } from "@/constants/theme";
 
 type BadgeType = 'warning' | 'danger' | 'info' | 'success';
 

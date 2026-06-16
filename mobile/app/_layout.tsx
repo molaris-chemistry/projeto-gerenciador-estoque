@@ -13,6 +13,10 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="reagente/[id]"
+          options={{ animation: 'slide_from_right' }}
+        />
       </Stack>
     </>
   );

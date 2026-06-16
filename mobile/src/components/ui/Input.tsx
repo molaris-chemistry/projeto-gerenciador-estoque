@@ -9,11 +9,13 @@ import {
 } from 'react-native';
 import {
   Colors,
-  FontSize,
-  FontWeight,
+  Typography,
   Spacing,
-  BorderRadius,
-} from '@/constants/Colors';
+  Radius as BorderRadius,
+} from '@/constants/theme';
+
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 
 interface InputProps extends TextInputProps {
   label: string;

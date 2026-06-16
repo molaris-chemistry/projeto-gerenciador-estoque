@@ -16,12 +16,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card, Input, Picker } from "@/components/ui";
 import {
-  BorderRadius,
+  Radius as BorderRadius,
   Colors,
-  FontSize,
-  FontWeight,
   Spacing,
-} from "@/constants/Colors";
+  Typography,
+} from "@/constants/theme";
+
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 import {
   createMovimentacao,
   fetchMaterias,
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   title: {
-    fontSize: FontSize.xxl,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,

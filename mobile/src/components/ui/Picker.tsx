@@ -10,12 +10,14 @@ import {
   type ViewStyle,
 } from "react-native";
 import {
-  BorderRadius,
+  Radius as BorderRadius,
   Colors,
-  FontSize,
-  FontWeight,
+  Typography,
   Spacing,
-} from "@/constants/Colors";
+} from "@/constants/theme";
+
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 
 export interface PickerOption {
   id: number | string;

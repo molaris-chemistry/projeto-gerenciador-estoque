@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {  View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, Radius as BorderRadius , Typography } from "@/constants/theme";
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 
 type TabConfig = {
   name: string;

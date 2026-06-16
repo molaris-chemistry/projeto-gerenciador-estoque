@@ -11,11 +11,13 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Colors,
-  BorderRadius,
-  FontSize,
-  FontWeight,
+  Radius as BorderRadius,
+  Typography,
   Spacing,
-} from "@/constants/Colors";
+} from "@/constants/theme";
+
+const FontSize = Typography.size;
+const FontWeight = Typography.weight;
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -45,12 +47,12 @@ export function Button({
       fontSize: FontSize.sm,
     },
     md: {
-      paddingHorizontal: Spacing.xl,
+      paddingHorizontal: Spacing.lg,
       paddingVertical: 14,
       fontSize: FontSize.base,
     },
     lg: {
-      paddingHorizontal: Spacing.xxl,
+      paddingHorizontal: Spacing.xl,
       paddingVertical: 18,
       fontSize: FontSize.lg,
     },

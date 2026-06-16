@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../constants/theme';
-import { formatDataMovimentacao, getRelativeTime, formatQuantidade } from '../utils/formatters';
-import type { Movimentacao } from '../types';
+import { Colors, Typography, Spacing, Radius } from "@/constants/theme";
+import { formatDataMovimentacao, getRelativeTime, formatQuantidade } from '@/utils/formatters';
+import type { Movimentacao } from '@/types';
 
 interface TimelineItemProps {
   movimentacao: Movimentacao;
@@ -29,7 +29,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({ movimentacao, isLast
           </View>
 
           <Text style={[styles.quantidade, { color: dotColor }]}>
-            {formatQuantidade(movimentacao.quantidade, movimentacao.unidade)}
+            {formatQuantidade(movimentacao.quantidade, movimentacao.unidade || "")}
           </Text>
         </View>
 

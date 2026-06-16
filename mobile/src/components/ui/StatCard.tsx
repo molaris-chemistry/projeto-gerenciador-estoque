@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Pressable } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../constants/theme';
+import { Colors, Typography, Spacing, Radius, Shadow } from "@/constants/theme";
 
 interface StatCardProps {
   icon: string;

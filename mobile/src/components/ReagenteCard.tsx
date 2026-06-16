@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../constants/theme';
-import { AlertBadge } from './AlertBadge';
-import { formatQuantidade, isLowStock, isExpiringSoon } from '../utils/formatters';
-import type { Reagente } from '../types';
+import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
+import { AlertBadge } from '@/components/ui';
+import { formatQuantidade, isLowStock, isExpiringSoon } from '@/utils/formatters';
+import type { Reagente } from '@/types';
 
 interface ReagenteCardProps {
   reagente: Reagente;
