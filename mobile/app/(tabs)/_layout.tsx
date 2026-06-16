@@ -3,6 +3,7 @@ import {  View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius as BorderRadius , Typography } from "@/constants/theme";
+import { useDashboard } from '@/contexts/DashboardContext';
 const FontSize = Typography.size;
 const FontWeight = Typography.weight;
 
@@ -15,6 +16,13 @@ type TabConfig = {
 };
 
 const TABS: TabConfig[] = [
+  {
+    name: 'dashboard',
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: 'speedometer-outline',
+    iconFocused: 'speedometer',
+  },
   {
     name: 'index',
     href: '/',
@@ -41,12 +49,13 @@ const TABS: TabConfig[] = [
 type TabItemProps = {
   isFocused?: boolean;
   tab: TabConfig;
+  badgeCount?: number;
   onPress?: () => void;
   onLongPress?: () => void;
 };
 
 const TabItem = React.forwardRef<View, TabItemProps>(
-  ({ isFocused, tab, onPress, onLongPress }, ref) => {
+  ({ isFocused, tab, badgeCount = 0, onPress, onLongPress }, ref) => {
     return (
       <TouchableOpacity
         ref={ref as any}
@@ -61,6 +70,13 @@ const TabItem = React.forwardRef<View, TabItemProps>(
             size={22}
             color={isFocused ? Colors.primary : Colors.textTertiary}
           />
+          {badgeCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText} numberOfLines={1}>
+                {badgeCount > 99 ? '99+' : badgeCount}
+              </Text>
+            </View>
+          )}
         </View>
         <Text
           style={[styles.tabLabel, isFocused && styles.tabLabelActive]}
@@ -75,13 +91,18 @@ const TabItem = React.forwardRef<View, TabItemProps>(
 );
 
 export default function TabLayout() {
+  const { totalAlertas } = useDashboard();
+
   return (
     <Tabs>
       <TabSlot />
       <TabList style={styles.tabBar}>
         {TABS.map((tab) => (
           <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
-            <TabItem tab={tab} />
+            <TabItem
+              tab={tab}
+              badgeCount={tab.name === 'dashboard' ? totalAlertas : 0}
+            />
           </TabTrigger>
         ))}
       </TabList>
@@ -117,6 +138,26 @@ const styles = StyleSheet.create({
   },
   iconContainerActive: {
     backgroundColor: 'rgba(108, 99, 255, 0.15)',
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: 2,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  badgeText: {
+    color: Colors.textPrimary,
+    fontSize: 9,
+    fontWeight: FontWeight.bold,
+    lineHeight: 12,
   },
   tabLabel: {
     fontSize: FontSize.xs,
