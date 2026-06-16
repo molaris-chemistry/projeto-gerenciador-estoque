@@ -41,6 +41,13 @@ export interface Reagente {
   nome: string;
   quantidade: number;
   unidade: string;
+  dataValidade?: string | null; // ISO date "YYYY-MM-DD"
+  quantidadeMinima?: number | null;
+}
+
+export interface AlertasResponse {
+  vencendo: Reagente[];
+  estoqueMinimo: Reagente[];
 }
 
 // ─── Materia ────────────────────────────────────────────────
