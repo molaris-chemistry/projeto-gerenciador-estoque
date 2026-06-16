@@ -1,41 +1,3 @@
-// ─── Navigation ───────────────────────────────────────────────
-export type RootStackParamList = {
-  index: undefined;
-  "(tabs)": undefined;
-};
-
-// ─── Domain ──────────────────────────────────────────────────
-export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  minimumStock: number;
-  location?: string;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-}
-
-export interface StockMovement {
-  id: string;
-  productId: string;
-  type: "IN" | "OUT" | "ADJUSTMENT";
-  quantity: number;
-  reason?: string;
-  performedBy?: string;
-  createdAt: Date;
-}
-
-// ─── Reagente ────────────────────────────────────────────────
 export interface Reagente {
   id: number;
   nome: string;
@@ -43,20 +5,17 @@ export interface Reagente {
   unidade: string;
 }
 
-// ─── Materia ────────────────────────────────────────────────
 export interface Materia {
   id: number;
   nome: string;
 }
 
-// ─── Turma ──────────────────────────────────────────────────
 export interface Turma {
   id: number;
   sala: string;
   nome: string;
 }
 
-// ─── Movimentacao ───────────────────────────────────────────
 export interface Movimentacao {
   id: number;
   tipo: "ENTRADA" | "RETIRADA";
@@ -78,3 +37,17 @@ export interface MovimentacaoRequest {
   materiaId: number;
   turmaId: number;
 }
+
+export type RootTabParamList = {
+  Tab1: undefined;
+  Tab2: undefined;
+  Tab3: undefined;
+  Tab4: undefined;
+  Tab5: undefined;
+};
+
+export type Tab2StackParamList = {
+  Dashboard: undefined;
+  Reagentes: undefined;
+  ReagenteDetail: { reagenteId: number };
+};
