@@ -3,10 +3,10 @@ spring:
     name: reagentes-api
 
   datasource:
-    url: jdbc:mysql://localhost:3306/reagentes_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: ${DB_USERNAME:root}
+    url: jdbc:postgresql://localhost:5432/reagentes_db
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     show-sql: true
