@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,6 +36,13 @@ public class Reagente {
     @NotBlank(message = "Unidade é obrigatória")
     @Column(nullable = false, length = 10)
     private String unidade = "g";
+
+    @Column(name = "data_validade")
+    private LocalDate dataValidade;
+
+    @PositiveOrZero(message = "Quantidade mínima deve ser positiva ou zero")
+    @Column(name = "quantidade_minima", precision = 10, scale = 3)
+    private BigDecimal quantidadeMinima;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

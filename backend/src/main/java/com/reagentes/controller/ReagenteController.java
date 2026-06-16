@@ -1,5 +1,6 @@
 package com.reagentes.controller;
 
+import com.reagentes.dto.AlertasResponseDTO;
 import com.reagentes.dto.ReagenteDTO;
 import com.reagentes.model.Reagente;
 import com.reagentes.service.ReagenteService;
@@ -27,12 +28,16 @@ public class ReagenteController {
         return ResponseEntity.ok(reagenteDTOs);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ReagenteDTO> getReagenteById(@PathVariable Long id) {
-        return reagenteService.findById(id)
-                .map(this::convertToDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/alertas")
+    public ResponseEntity<AlertasResponseDTO> getAlertas() {
+        AlertasResponseDTO alertas = new AlertasResponseDTO(
+                reagenteService.findReagentesVencendo().stream()
+                        .map(this::convertToDto)
+                        .collect(Collectors.toList()),
+                reagenteService.findReagentesComEstoqueMinimo().stream()
+                        .map(this::convertToDto)
+                        .collect(Collectors.toList()));
+        return ResponseEntity.ok(alertas);
     }
 
     @GetMapping("/search")
@@ -41,6 +46,14 @@ public class ReagenteController {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reagenteDTOs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ReagenteDTO> getReagenteById(@PathVariable Long id) {
+        return reagenteService.findById(id)
+                .map(this::convertToDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -73,7 +86,13 @@ public class ReagenteController {
     }
 
     private ReagenteDTO convertToDto(Reagente reagente) {
-        return new ReagenteDTO(reagente.getId(), reagente.getNome(), reagente.getQuantidade(), reagente.getUnidade());
+        return new ReagenteDTO(
+                reagente.getId(),
+                reagente.getNome(),
+                reagente.getQuantidade(),
+                reagente.getUnidade(),
+                reagente.getDataValidade(),
+                reagente.getQuantidadeMinima());
     }
 
     private Reagente convertToEntity(ReagenteDTO reagenteDTO) {
@@ -82,6 +101,8 @@ public class ReagenteController {
         reagente.setNome(reagenteDTO.getNome());
         reagente.setQuantidade(reagenteDTO.getQuantidade());
         reagente.setUnidade(reagenteDTO.getUnidade());
+        reagente.setDataValidade(reagenteDTO.getDataValidade());
+        reagente.setQuantidadeMinima(reagenteDTO.getQuantidadeMinima());
         return reagente;
     }
 }
