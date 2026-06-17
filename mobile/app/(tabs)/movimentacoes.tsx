@@ -221,84 +221,20 @@ export default function MovimentacoesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <Text style={styles.title}>
-            {showForm ? "Nova Movimentação" : "Movimentações"}
-          </Text>
-          {showForm && (
-            <TouchableOpacity
-              onPress={() => {
-                setShowForm(false);
-                setErrors({});
-                setFormData({
-                  tipo: "",
-                  reagenteId: "",
-                  quantidade: "",
-                  materiaId: "",
-                  turmaId: "",
-                });
-              }}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={20} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          )}
-        </View>
-        <Text style={styles.subtitle}>
-          {showForm
-            ? "Preencha os campos abaixo para registrar"
-            : "Registre e acompanhe as entradas e saídas"}
-        </Text>
-      </View>
-
       {!showForm ? (
         <>
-          <View style={styles.filterTabs}>
-            {(["ALL", "ENTRADA", "RETIRADA"] as const).map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.filterTab,
-                  activeTab === type && styles.filterTabActive,
-                ]}
-                onPress={() => setActiveTab(type)}
-              >
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    activeTab === type && styles.filterTabTextActive,
-                  ]}
-                >
-                  {type === "ALL" ? "Todas" : type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.actionBar}>
-            <Button
-              title="+ Registrar Movimentação"
-              variant="primary"
-              size="md"
-              onPress={() => setShowForm(true)}
-              style={{ flex: 1 }}
-            />
-          </View>
-
           {/* Lista de Movimentações */}
           {isLoadingMovimentacoes && !isRefreshing ? (
-            <View style={styles.centerContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-            </View>
-          ) : movimentacoes.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyText}>
-                {activeTab === "ALL"
-                  ? "Nenhuma movimentação registrada"
-                  : `Nenhuma ${activeTab === "ENTRADA" ? "entrada" : "retirada"} registrada`}
-              </Text>
+            <View style={{ flex: 1 }}>
+              <View style={styles.header}>
+                <View style={styles.headerTitleRow}>
+                  <Text style={styles.title}>Movimentações</Text>
+                </View>
+                <Text style={styles.subtitle}>Registre e acompanhe as entradas e saídas</Text>
+              </View>
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+              </View>
             </View>
           ) : (
             <FlatList
@@ -307,6 +243,58 @@ export default function MovimentacoesScreen() {
               keyExtractor={(item) => String(item.id)}
               contentContainerStyle={styles.listContainer}
               scrollEnabled={true}
+              ListHeaderComponent={
+                <View>
+                  <View style={styles.header}>
+                    <View style={styles.headerTitleRow}>
+                      <Text style={styles.title}>Movimentações</Text>
+                    </View>
+                    <Text style={styles.subtitle}>Registre e acompanhe as entradas e saídas</Text>
+                  </View>
+
+                  <View style={styles.filterTabs}>
+                    {(["ALL", "ENTRADA", "RETIRADA"] as const).map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.filterTab,
+                          activeTab === type && styles.filterTabActive,
+                        ]}
+                        onPress={() => setActiveTab(type)}
+                      >
+                        <Text
+                          style={[
+                            styles.filterTabText,
+                            activeTab === type && styles.filterTabTextActive,
+                          ]}
+                        >
+                          {type === "ALL" ? "Todas" : type}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <View style={styles.actionBar}>
+                    <Button
+                      title="+ Registrar Movimentação"
+                      variant="primary"
+                      size="md"
+                      onPress={() => setShowForm(true)}
+                      style={{ flex: 1 }}
+                    />
+                  </View>
+                </View>
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyIcon}>📋</Text>
+                  <Text style={styles.emptyText}>
+                    {activeTab === "ALL"
+                      ? "Nenhuma movimentação registrada"
+                      : `Nenhuma ${activeTab === "ENTRADA" ? "entrada" : "retirada"} registrada`}
+                  </Text>
+                </View>
+              }
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}
@@ -325,8 +313,32 @@ export default function MovimentacoesScreen() {
         >
           <ScrollView
             style={styles.formContainer}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxxl }}
             showsVerticalScrollIndicator={false}
           >
+            <View style={styles.header}>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.title}>Nova Movimentação</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowForm(false);
+                    setErrors({});
+                    setFormData({
+                      tipo: "",
+                      reagenteId: "",
+                      quantidade: "",
+                      materiaId: "",
+                      turmaId: "",
+                    });
+                  }}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={20} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.subtitle}>Preencha os campos abaixo para registrar</Text>
+            </View>
+
             <Card style={styles.formCard}>
               {isLoadingOptions ? (
                 <View style={styles.loadingContainer}>
@@ -532,8 +544,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   listContainer: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
+    paddingBottom: Spacing.xl,
     gap: Spacing.md,
   },
   centerContainer: {
@@ -558,7 +569,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   movimentacaoCard: {
-    marginBottom: 0,
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.md,
   },
   movimentacaoHeader: {
     flexDirection: "row",

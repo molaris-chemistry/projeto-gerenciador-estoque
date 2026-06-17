@@ -7,6 +7,7 @@ import {
   RefreshControl,
   StatusBar,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -99,7 +100,19 @@ export default function CatalogoScreen() {
 
   const renderHeader = useCallback(
     () => (
-      <View>
+      <ScrollView>
+        <View style={styles.screenHeader}>
+          <Text style={styles.screenTitle}>Catálogo</Text>
+          <Text style={styles.screenSubtitle}>Gestão de estoque químico</Text>
+        </View>
+
+        <SearchBar
+          value={searchQuery}
+          onChangeText={handleSearchChange}
+          isLoading={isSearchLoading}
+          placeholder="Buscar por nome do reagente..."
+        />
+
         <View style={styles.filterRow}>
           {FILTER_TABS.map((tab) => (
             <Pressable
@@ -129,9 +142,9 @@ export default function CatalogoScreen() {
             ? ' com estoque baixo'
             : ' encontrado' + (displayedReagentes.length !== 1 ? 's' : '')}
         </Text>
-      </View>
+      </ScrollView>
     ),
-    [activeFilter, displayedReagentes.length],
+    [activeFilter, displayedReagentes.length, searchQuery, isSearchLoading, handleSearchChange],
   );
 
   const renderEmpty = () => (
@@ -158,18 +171,6 @@ export default function CatalogoScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-
-      <View style={styles.screenHeader}>
-        <Text style={styles.screenTitle}>Catálogo</Text>
-        <Text style={styles.screenSubtitle}>Gestão de estoque químico</Text>
-      </View>
-
-      <SearchBar
-        value={searchQuery}
-        onChangeText={handleSearchChange}
-        isLoading={isSearchLoading}
-        placeholder="Buscar por nome do reagente..."
-      />
 
       <FlatList
         data={loading ? [] : displayedReagentes}

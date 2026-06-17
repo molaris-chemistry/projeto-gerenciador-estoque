@@ -139,17 +139,13 @@ export default function RelatoriosScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>Visão geral e relatórios</Text>
-      </View>
-
       {isLoading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : (
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -160,6 +156,11 @@ export default function RelatoriosScreen() {
             />
           }
         >
+          <View style={styles.header}>
+            <Text style={styles.title}>Dashboard</Text>
+            <Text style={styles.subtitle}>Visão geral e relatórios</Text>
+          </View>
+
           {/* Stats */}
           <View style={styles.statsRow}>
             <StatCard
@@ -340,6 +341,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xxxl,
+    flexGrow: 1,
   },
   statsRow: {
     flexDirection: 'row',

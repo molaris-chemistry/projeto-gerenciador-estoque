@@ -113,9 +113,12 @@ function AuthenticatedTabLayout() {
   const { totalAlertas } = useDashboard();
 
   return (
-    <Tabs>
-      <TabSlot />
-      <TabList style={styles.tabBar}>
+    <View style={{ flex: 1 }}>
+      <Tabs style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <TabSlot />
+        </View>
+        <TabList style={styles.tabBar}>
         {TABS.map((tab) => (
           <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
             <TabItem
@@ -125,7 +128,8 @@ function AuthenticatedTabLayout() {
           </TabTrigger>
         ))}
       </TabList>
-    </Tabs>
+      </Tabs>
+    </View>
   );
 }
 
