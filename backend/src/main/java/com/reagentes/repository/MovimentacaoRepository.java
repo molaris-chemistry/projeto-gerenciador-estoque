@@ -61,4 +61,29 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
     Long countByTipoAndDataBetween(@Param("tipo") TipoMovimentacao tipo,
                                    @Param("de") LocalDateTime de,
                                    @Param("ate") LocalDateTime ate);
+
+    @Query("SELECT m FROM Movimentacao m " +
+            "JOIN FETCH m.reagente r " +
+            "LEFT JOIN FETCH m.materia ma " +
+            "LEFT JOIN FETCH m.turma t " +
+            "WHERE m.data BETWEEN :de AND :ate " +
+            "ORDER BY m.data DESC")
+    List<Movimentacao> findByDataBetween(@Param("de") LocalDateTime de,
+                                         @Param("ate") LocalDateTime ate);
+
+    @Query("SELECT m FROM Movimentacao m " +
+            "JOIN FETCH m.reagente r " +
+            "LEFT JOIN FETCH m.materia ma " +
+            "LEFT JOIN FETCH m.turma t " +
+            "WHERE t.id = :turmaId " +
+            "ORDER BY m.data DESC")
+    List<Movimentacao> findByTurmaIdWithDetails(@Param("turmaId") Long turmaId);
+
+    @Query("SELECT m FROM Movimentacao m " +
+            "JOIN FETCH m.reagente r " +
+            "LEFT JOIN FETCH m.materia ma " +
+            "LEFT JOIN FETCH m.turma t " +
+            "WHERE ma.id = :materiaId " +
+            "ORDER BY m.data DESC")
+    List<Movimentacao> findByMateriaIdWithDetails(@Param("materiaId") Long materiaId);
 }
