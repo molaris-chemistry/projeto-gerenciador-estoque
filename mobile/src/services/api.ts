@@ -11,6 +11,10 @@ export function setAuthToken(token: string | null): void {
   _token = token;
 }
 
+export function getAuthToken(): string | null {
+  return _token;
+}
+
 export function setOnUnauthorized(handler: () => void): void {
   _onUnauthorized = handler;
 }

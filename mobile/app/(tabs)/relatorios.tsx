@@ -1,337 +1,518 @@
-import React, { useState, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
-  RefreshControl,
-  StatusBar,
-  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-
-import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
-import { StatCard, BarChart, DonutChart, TimelineItem } from "@/components/ui";
+import { Card } from '@/components/ui';
+import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { useDashboard } from '@/contexts/DashboardContext';
+import type { Reagente } from '@/types';
 import {
-  MOCK_REAGENTES,
-  MOCK_MOVIMENTACOES,
-  MOCK_DASHBOARD_STATS,
-} from '@/data/mockData';
+  downloadRelatorioGeral,
+  downloadRelatorioSemestral,
+} from '@/services/relatorios';
 
-function getTopReagentesChartData() {
-  return [...MOCK_REAGENTES]
-    .sort((a, b) => b.quantidade - a.quantidade)
-    .slice(0, 8)
-    .map((r, i) => ({
-      label: r.nome.length > 14 ? r.nome.slice(0, 13) + '…' : r.nome,
-      value: r.quantidade,
-      unit: r.unidade,
-      color: Colors.chart[i % Colors.chart.length],
-    }));
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
+
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIcon, { backgroundColor: `${color}20` }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel} numberOfLines={2}>
+        {label}
+      </Text>
+    </View>
+  );
 }
 
-function getMovimentacoesByMateriaChartData() {
-  const counts: Record<string, number> = {};
-  MOCK_MOVIMENTACOES.forEach(m => {
-    const key = m.materia || 'Outros';
-    counts[key] = (counts[key] ?? 0) + 1;
-  });
-  return Object.entries(counts).map(([label, value], i) => ({
-    label,
-    value,
-    color: Colors.chart[i % Colors.chart.length],
-  }));
+function formatDateBR(iso?: string | null): string {
+  if (!iso) return '—';
+  const [datePart] = iso.split('T');
+  const [y, m, d] = datePart.split('-');
+  if (!y || !m || !d) return iso;
+  return `${d}/${m}/${y}`;
+}
+
+function AlertaItem({
+  reagente,
+  tipo,
+}: {
+  reagente: Reagente;
+  tipo: 'vencendo' | 'estoqueMinimo';
+}) {
+  const isVencendo = tipo === 'vencendo';
+  const color = isVencendo ? Colors.warning : Colors.error;
+  const icon: keyof typeof Ionicons.glyphMap = isVencendo
+    ? 'time-outline'
+    : 'alert-circle-outline';
+
+  return (
+    <Card style={styles.alertaCard}>
+      <View style={styles.alertaRow}>
+        <View style={[styles.alertaIcon, { backgroundColor: `${color}20` }]}>
+          <Ionicons name={icon} size={20} color={color} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.alertaNome}>{reagente.nome}</Text>
+          <Text style={styles.alertaDetalhe}>
+            {isVencendo
+              ? `Validade: ${formatDateBR(reagente.dataValidade)}`
+              : `Estoque: ${reagente.quantidade} ${reagente.unidade}` +
+                (reagente.quantidadeMinima != null
+                  ? ` • mín. ${reagente.quantidadeMinima} ${reagente.unidade}`
+                  : '')}
+          </Text>
+        </View>
+        <View style={[styles.alertaTag, { backgroundColor: `${color}20` }]}>
+          <Text style={[styles.alertaTagText, { color }]}>
+            {isVencendo ? 'VENCENDO' : 'BAIXO'}
+          </Text>
+        </View>
+      </View>
+    </Card>
+  );
 }
 
 export default function RelatoriosScreen() {
-  const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
+  const {
+    totalReagentes,
+    movimentacoesHoje,
+    alertas,
+    totalAlertas,
+    isLoading,
+    isRefreshing,
+    error,
+    refresh,
+  } = useDashboard();
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    setRefreshing(false);
-  }, []);
+  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
+  const [loadingGeral, setLoadingGeral] = useState(false);
+  const [loadingSemestral, setLoadingSemestral] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const greeting = (() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bom dia';
-    if (hour < 18) return 'Boa tarde';
-    return 'Boa noite';
-  })();
+  const handleRelatorioGeral = async () => {
+    try {
+      setLoadingGeral(true);
+      setDownloadError(null);
+      await downloadRelatorioGeral();
+    } catch (e: any) {
+      setDownloadError(e?.message ?? 'Erro ao baixar relatório geral');
+    } finally {
+      setLoadingGeral(false);
+    }
+  };
 
-  const today = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const handleRelatorioSemestral = async () => {
+    try {
+      setLoadingSemestral(true);
+      setDownloadError(null);
+      await downloadRelatorioSemestral(selectedYear);
+    } catch (e: any) {
+      setDownloadError(e?.message ?? 'Erro ao baixar relatório semestral');
+    } finally {
+      setLoadingSemestral(false);
+    }
+  };
 
-  const barData = getTopReagentesChartData();
-  const donutData = getMovimentacoesByMateriaChartData();
-  const recentActivity = [...MOCK_MOVIMENTACOES]
-    .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-    .slice(0, 5);
+  const semAlertas = totalAlertas === 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>{greeting} 👋</Text>
-          <Text style={styles.headerTitle}>Painel de Estoque</Text>
-          <Text style={styles.headerDate}>{today}</Text>
-        </View>
-        <View style={styles.alertBubble}>
-          {MOCK_DASHBOARD_STATS.lowStockCount > 0 && (
-            <View style={styles.alertDot}>
-              <Text style={styles.alertDotText}>{MOCK_DASHBOARD_STATS.lowStockCount}</Text>
-            </View>
-          )}
-          <Text style={styles.alertIcon}>🔔</Text>
-        </View>
+        <Text style={styles.title}>Dashboard</Text>
+        <Text style={styles.subtitle}>Visão geral e relatórios</Text>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.cyan}
-            colors={[Colors.cyan]}
-          />
-        }
-      >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.statsRow}
-        >
-          <StatCard
-            icon="🧪"
-            title="Reagentes"
-            value={MOCK_DASHBOARD_STATS.totalReagentes}
-            subtitle="no estoque"
-            accentColor={Colors.cyan}
-          />
-          <StatCard
-            icon="🔄"
-            title="Movimentações"
-            value={MOCK_DASHBOARD_STATS.totalMovimentacoes}
-            subtitle="registradas"
-            accentColor={Colors.violet}
-          />
-          <StatCard
-            icon="👥"
-            title="Turmas"
-            value={MOCK_DASHBOARD_STATS.totalTurmas}
-            subtitle="ativas"
-            accentColor={Colors.success}
-          />
-          <StatCard
-            icon="⚠️"
-            title="Estoque Baixo"
-            value={MOCK_DASHBOARD_STATS.lowStockCount}
-            subtitle="itens críticos"
-            accentColor={Colors.danger}
-          />
-        </ScrollView>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <View style={[styles.sectionAccent, { backgroundColor: Colors.cyan }]} />
-              <Text style={styles.sectionTitle}>Visão do Estoque</Text>
-            </View>
-            <Pressable onPress={() => router.push('/')} hitSlop={8}>
-              <Text style={styles.sectionLink}>Ver todos →</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.sectionSubtitle}>Top 8 reagentes por quantidade</Text>
-          <View style={styles.card}>
-            <BarChart data={barData} />
-          </View>
+      {isLoading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <View style={[styles.sectionAccent, { backgroundColor: Colors.violet }]} />
-              <Text style={styles.sectionTitle}>Uso por Matéria</Text>
-            </View>
-          </View>
-          <Text style={styles.sectionSubtitle}>Movimentações registradas por disciplina</Text>
-          <View style={[styles.card, styles.donutCard]}>
-            <DonutChart
-              data={donutData}
-              size={160}
-              centerLabel={String(MOCK_DASHBOARD_STATS.totalMovimentacoes)}
-              centerSubLabel="movimentações"
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refresh}
+              tintColor={Colors.primary}
+            />
+          }
+        >
+          {/* Stats */}
+          <View style={styles.statsRow}>
+            <StatCard
+              icon="flask"
+              label="Total de reagentes"
+              value={totalReagentes}
+              color={Colors.primary}
+            />
+            <StatCard
+              icon="swap-horizontal"
+              label="Movimentações hoje"
+              value={movimentacoesHoje}
+              color={Colors.cyan}
+            />
+            <StatCard
+              icon="warning"
+              label="Itens em alerta"
+              value={totalAlertas}
+              color={Colors.warning}
             />
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <View style={[styles.sectionAccent, { backgroundColor: Colors.success }]} />
-              <Text style={styles.sectionTitle}>Atividade Recente</Text>
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="cloud-offline-outline" size={16} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
-          </View>
-          <Text style={styles.sectionSubtitle}>Últimas 5 movimentações</Text>
-          <View style={styles.timelineCard}>
-            {recentActivity.map((m, i) => (
-              <TimelineItem key={m.id} movimentacao={m} isLast={i === recentActivity.length - 1} />
-            ))}
-          </View>
-        </View>
+          )}
 
-        <View style={styles.footer} />
-      </ScrollView>
+          {/* Alertas */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Alertas</Text>
+            {semAlertas ? (
+              <View style={styles.emptyAlerts}>
+                <Ionicons name="shield-checkmark-outline" size={40} color={Colors.success} />
+                <Text style={styles.emptyText}>Estoque em dia. Nenhum alerta.</Text>
+              </View>
+            ) : (
+              <View style={styles.alertasList}>
+                {alertas.estoqueMinimo.map((r) => (
+                  <AlertaItem key={`min-${r.id}`} reagente={r} tipo="estoqueMinimo" />
+                ))}
+                {alertas.vencendo.map((r) => (
+                  <AlertaItem key={`venc-${r.id}`} reagente={r} tipo="vencendo" />
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Relatórios PDF */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Relatórios PDF</Text>
+
+            {downloadError && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={16} color={Colors.error} />
+                <Text style={styles.errorText}>{downloadError}</Text>
+              </View>
+            )}
+
+            {/* Relatório Geral */}
+            <Card style={styles.reportCard}>
+              <View style={styles.reportHeader}>
+                <View style={[styles.reportIcon, { backgroundColor: Colors.violetDim }]}>
+                  <Ionicons name="document-text-outline" size={22} color={Colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reportTitle}>Relatório Geral</Text>
+                  <Text style={styles.reportDesc}>
+                    Todos os reagentes e movimentações
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[styles.downloadBtn, loadingGeral && styles.downloadBtnDisabled]}
+                onPress={handleRelatorioGeral}
+                disabled={loadingGeral}
+                activeOpacity={0.8}
+              >
+                {loadingGeral ? (
+                  <ActivityIndicator size="small" color={Colors.textPrimary} />
+                ) : (
+                  <>
+                    <Ionicons name="download-outline" size={18} color={Colors.textPrimary} />
+                    <Text style={styles.downloadBtnText}>Baixar PDF</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </Card>
+
+            {/* Relatório Semestral */}
+            <Card style={styles.reportCard}>
+              <View style={styles.reportHeader}>
+                <View style={[styles.reportIcon, { backgroundColor: Colors.cyanDim }]}>
+                  <Ionicons name="calendar-outline" size={22} color={Colors.cyan} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reportTitle}>Relatório Semestral</Text>
+                  <Text style={styles.reportDesc}>
+                    Movimentações por semestre do ano
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.yearPicker}>
+                {YEAR_OPTIONS.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[
+                      styles.yearOption,
+                      selectedYear === year && styles.yearOptionActive,
+                    ]}
+                    onPress={() => setSelectedYear(year)}
+                  >
+                    <Text
+                      style={[
+                        styles.yearOptionText,
+                        selectedYear === year && styles.yearOptionTextActive,
+                      ]}
+                    >
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.downloadBtn, loadingSemestral && styles.downloadBtnDisabled]}
+                onPress={handleRelatorioSemestral}
+                disabled={loadingSemestral}
+                activeOpacity={0.8}
+              >
+                {loadingSemestral ? (
+                  <ActivityIndicator size="small" color={Colors.textPrimary} />
+                ) : (
+                  <>
+                    <Ionicons name="download-outline" size={18} color={Colors.textPrimary} />
+                    <Text style={styles.downloadBtnText}>Baixar PDF {selectedYear}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </Card>
+          </View>
+
+          <View style={{ height: Spacing.xxxl }} />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingBottom: Spacing.xxxxxl,
-  },
-
   header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.xxxl,
+    paddingBottom: Spacing.lg,
   },
-  greeting: {
-    fontSize: Typography.size.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.weight.medium,
-    marginBottom: 2,
-  },
-  headerTitle: {
+  title: {
     fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
+    fontWeight: Typography.weight.bold,
     color: Colors.textPrimary,
     letterSpacing: -0.5,
   },
-  headerDate: {
+  subtitle: {
     fontSize: Typography.size.sm,
-    color: Colors.textMuted,
-    marginTop: 2,
-    textTransform: 'capitalize',
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
-  alertBubble: {
-    position: 'relative',
-    width: 44,
-    height: 44,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
-    alignItems: 'center',
+  centerContainer: {
+    flex: 1,
     justifyContent: 'center',
-    marginTop: 4,
-  },
-  alertDot: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: Colors.danger,
-    borderRadius: Radius.full,
-    minWidth: 18,
-    height: 18,
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
   },
-  alertDotText: {
-    fontSize: 10,
-    fontWeight: Typography.weight.bold,
-    color: Colors.textPrimary,
-  },
-  alertIcon: {
-    fontSize: 20,
-  },
-
-  statsRow: {
+  scrollContent: {
     paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
+    paddingBottom: Spacing.xxxl,
+  },
+  statsRow: {
+    flexDirection: 'row',
     gap: Spacing.md,
   },
-
-  section: {
-    marginTop: Spacing.xl,
-    paddingHorizontal: Spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  sectionAccent: {
-    width: 4,
-    height: 20,
-    borderRadius: Radius.full,
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionTitle: {
-    fontSize: Typography.size.xl,
+  statValue: {
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
     color: Colors.textPrimary,
   },
-  sectionSubtitle: {
-    fontSize: Typography.size.sm,
-    color: Colors.textMuted,
-    marginBottom: Spacing.md,
-    marginLeft: Spacing.md + 4,
+  statLabel: {
+    fontSize: Typography.size.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 15,
   },
-  sectionLink: {
-    fontSize: Typography.size.sm,
-    color: Colors.cyan,
-    fontWeight: Typography.weight.semibold,
-  },
-
-  card: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
-    padding: Spacing.lg,
-    ...Shadow.sm,
-  },
-  donutCard: {
+  errorBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.xxl,
-  },
-  timelineCard: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: Radius.xl,
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
-    padding: Spacing.lg,
-    ...Shadow.sm,
+    borderColor: 'rgba(244, 63, 94, 0.25)',
   },
-
-  footer: {
-    height: Spacing.xxl,
+  errorText: {
+    flex: 1,
+    fontSize: Typography.size.sm,
+    color: Colors.error,
+  },
+  section: {
+    marginTop: Spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  alertasList: {
+    gap: Spacing.md,
+  },
+  alertaCard: {
+    padding: Spacing.lg,
+  },
+  alertaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  alertaIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertaNome: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  alertaDetalhe: {
+    fontSize: Typography.size.sm,
+    color: Colors.textSecondary,
+  },
+  alertaTag: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
+  },
+  alertaTagText: {
+    fontSize: 9,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 0.5,
+  },
+  emptyAlerts: {
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.xxxl,
+  },
+  emptyText: {
+    fontSize: Typography.size.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  reportCard: {
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  reportIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reportTitle: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  reportDesc: {
+    fontSize: Typography.size.sm,
+    color: Colors.textSecondary,
+  },
+  yearPicker: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  yearOption: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  yearOptionActive: {
+    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+    borderColor: Colors.cyan,
+  },
+  yearOptionText: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    color: Colors.textSecondary,
+  },
+  yearOptionTextActive: {
+    color: Colors.cyan,
+  },
+  downloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  downloadBtnDisabled: {
+    opacity: 0.5,
+  },
+  downloadBtnText: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.bold,
+    color: Colors.textPrimary,
   },
 });
