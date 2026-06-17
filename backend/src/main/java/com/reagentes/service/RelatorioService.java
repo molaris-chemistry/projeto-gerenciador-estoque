@@ -4,11 +4,15 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.reagentes.model.Materia;
 import com.reagentes.model.Movimentacao;
 import com.reagentes.model.Reagente;
 import com.reagentes.model.TipoMovimentacao;
+import com.reagentes.model.Turma;
+import com.reagentes.repository.MateriaRepository;
 import com.reagentes.repository.MovimentacaoRepository;
 import com.reagentes.repository.ReagenteRepository;
+import com.reagentes.repository.TurmaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,12 @@ public class RelatorioService {
 
     @Autowired
     private ReagenteRepository reagenteRepository;
+
+    @Autowired
+    private TurmaRepository turmaRepository;
+
+    @Autowired
+    private MateriaRepository materiaRepository;
 
     public byte[] gerarRelatorioGeralPdf() throws Exception {
         List<Reagente> reagentes = reagenteRepository.findAll();
@@ -48,6 +58,21 @@ public class RelatorioService {
         semestresAgrupados.put("segundo_semestre", agruparPorMateriaTurmaReagente(movsSegundoSemestre));
 
         return gerarPdfComDados("Relatório Semestral " + ano, null, null, semestresAgrupados);
+    }
+
+    public byte[] gerarRelatorioPorTurmaPdf(Long turmaId) throws Exception {
+        Turma turma = turmaRepository.findById(turmaId)
+                .orElseThrow(() -> new IllegalArgumentException("Turma não encontrada: " + turmaId));
+        List<Movimentacao> movimentacoes = movimentacaoRepository.findByTurmaIdWithDetails(turmaId);
+        String label = (turma.getSala() + " " + turma.getNome()).trim();
+        return gerarPdfComDados("Relatório por Turma: " + label, null, movimentacoes, null);
+    }
+
+    public byte[] gerarRelatorioPorMateriaPdf(Long materiaId) throws Exception {
+        Materia materia = materiaRepository.findById(materiaId)
+                .orElseThrow(() -> new IllegalArgumentException("Matéria não encontrada: " + materiaId));
+        List<Movimentacao> movimentacoes = movimentacaoRepository.findByMateriaIdWithDetails(materiaId);
+        return gerarPdfComDados("Relatório por Matéria: " + materia.getNome(), null, movimentacoes, null);
     }
 
     private byte[] gerarPdfComDados(String titulo, List<Reagente> reagentes, List<Movimentacao> movimentacoes, Map<String, Object> semestresAgrupados) throws DocumentException {
@@ -219,8 +244,7 @@ public class RelatorioService {
 
             String nomeReagente = mov.getReagente() != null ? mov.getReagente().getNome() : "N/A";
             BigDecimal quantidade = mov.getQuantidade() != null ? mov.getQuantidade() : BigDecimal.ZERO;
-            String tipo = mov.getTipo() != null ? mov.getTipo().toUpperCase() : "";
-            BigDecimal signed = "RETIRADA".equals(tipo) ? quantidade.negate() : quantidade;
+            BigDecimal signed = TipoMovimentacao.RETIRADA == mov.getTipo() ? quantidade.negate() : quantidade;
 
             agrupamento.computeIfAbsent(nomeMateria, k -> new HashMap<>())
                     .computeIfAbsent(nomeTurma, k -> new HashMap<>())
