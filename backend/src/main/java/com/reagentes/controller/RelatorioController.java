@@ -51,4 +51,38 @@ public class RelatorioController {
                     .body(("Erro interno ao gerar PDF semestral: " + e.getMessage()).getBytes());
         }
     }
+
+    @GetMapping(value = "/por-turma/{turmaId}", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> gerarRelatorioPorTurma(@PathVariable Long turmaId) {
+        try {
+            byte[] pdfBytes = relatorioService.gerarRelatorioPorTurmaPdf(turmaId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio_turma_" + turmaId + ".pdf\"")
+                    .contentLength(pdfBytes.length)
+                    .body(pdfBytes);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+                    .body(("Erro interno ao gerar PDF: " + e.getMessage()).getBytes());
+        }
+    }
+
+    @GetMapping(value = "/por-materia/{materiaId}", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> gerarRelatorioPorMateria(@PathVariable Long materiaId) {
+        try {
+            byte[] pdfBytes = relatorioService.gerarRelatorioPorMateriaPdf(materiaId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio_materia_" + materiaId + ".pdf\"")
+                    .contentLength(pdfBytes.length)
+                    .body(pdfBytes);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+                    .body(("Erro interno ao gerar PDF: " + e.getMessage()).getBytes());
+        }
+    }
 }
