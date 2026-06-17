@@ -1,8 +1,8 @@
 import React from 'react';
-import {  View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius as BorderRadius , Typography } from "@/constants/theme";
+import { Colors, Spacing, Radius as BorderRadius, Typography } from "@/constants/theme";
 import { useDashboard } from '@/contexts/DashboardContext';
 const FontSize = Typography.size;
 const FontWeight = Typography.weight;
@@ -17,8 +17,8 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   {
-    name: 'dashboard',
-    href: '/dashboard',
+    name: 'Dashboard',
+    href: '/relatorios',
     label: 'Dashboard',
     icon: 'speedometer-outline',
     iconFocused: 'speedometer',
@@ -36,13 +36,6 @@ const TABS: TabConfig[] = [
     label: 'Movimentações',
     icon: 'swap-horizontal-outline',
     iconFocused: 'swap-horizontal',
-  },
-  {
-    name: 'relatorios',
-    href: '/relatorios',
-    label: 'Relatórios',
-    icon: 'bar-chart-outline',
-    iconFocused: 'bar-chart',
   },
 ];
 
@@ -101,7 +94,7 @@ export default function TabLayout() {
           <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
             <TabItem
               tab={tab}
-              badgeCount={tab.name === 'dashboard' ? totalAlertas : 0}
+              badgeCount={tab.name.toLowerCase() === 'dashboard' ? totalAlertas : 0}
             />
           </TabTrigger>
         ))}
@@ -132,12 +125,13 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 44,
     height: 32,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconContainerActive: {
     backgroundColor: 'rgba(108, 99, 255, 0.15)',
+    borderRadius: BorderRadius.full,
   },
   badge: {
     position: 'absolute',
@@ -174,7 +168,7 @@ const styles = StyleSheet.create({
     top: -8,
     width: 20,
     height: 3,
-    borderRadius: 2,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.primary,
   },
 });

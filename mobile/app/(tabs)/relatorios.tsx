@@ -76,6 +76,23 @@ export default function RelatoriosScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>{greeting} 👋</Text>
+          <Text style={styles.headerTitle}>Painel de Estoque</Text>
+          <Text style={styles.headerDate}>{today}</Text>
+        </View>
+        <View style={styles.alertBubble}>
+          {MOCK_DASHBOARD_STATS.lowStockCount > 0 && (
+            <View style={styles.alertDot}>
+              <Text style={styles.alertDotText}>{MOCK_DASHBOARD_STATS.lowStockCount}</Text>
+            </View>
+          )}
+          <Text style={styles.alertIcon}>🔔</Text>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -89,23 +106,6 @@ export default function RelatoriosScreen() {
           />
         }
       >
-
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{greeting} 👋</Text>
-            <Text style={styles.headerTitle}>Painel de Estoque</Text>
-            <Text style={styles.headerDate}>{today}</Text>
-          </View>
-          <View style={styles.alertBubble}>
-            {MOCK_DASHBOARD_STATS.lowStockCount > 0 && (
-              <View style={styles.alertDot}>
-                <Text style={styles.alertDotText}>{MOCK_DASHBOARD_STATS.lowStockCount}</Text>
-              </View>
-            )}
-            <Text style={styles.alertIcon}>🔔</Text>
-          </View>
-        </View>
-
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

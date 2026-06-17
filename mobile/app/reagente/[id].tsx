@@ -332,8 +332,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     borderWidth: 1.5,
     padding: Spacing.lg,
-    alignItems: 'center',
-    ...Shadow.cyan,
+    alignItems: 'center'
   },
   quantityLabel: {
     fontSize: Typography.size.sm,

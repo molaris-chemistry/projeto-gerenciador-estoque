@@ -60,6 +60,9 @@ export default function MovimentacoesScreen() {
   const [isLoadingMovimentacoes, setIsLoadingMovimentacoes] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const selectedReagente = reagentes.find((r) => String(r.id) === formData.reagenteId);
+  const selectedUnit = selectedReagente ? selectedReagente.unidade : "";
+
   useEffect(() => {
     const loadOptions = async () => {
       try {
@@ -219,45 +222,103 @@ export default function MovimentacoesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Movimentações</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.title}>
+            {showForm ? "Nova Movimentação" : "Movimentações"}
+          </Text>
+          {showForm && (
+            <TouchableOpacity
+              onPress={() => {
+                setShowForm(false);
+                setErrors({});
+                setFormData({
+                  tipo: "",
+                  reagenteId: "",
+                  quantidade: "",
+                  materiaId: "",
+                  turmaId: "",
+                });
+              }}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={20} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={styles.subtitle}>
-          Registre entradas e saídas de reagentes
+          {showForm
+            ? "Preencha os campos abaixo para registrar"
+            : "Registre e acompanhe as entradas e saídas"}
         </Text>
       </View>
 
-      <View style={styles.filterTabs}>
-        {(["ALL", "ENTRADA", "RETIRADA"] as const).map((type) => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.filterTab,
-              activeTab === type && styles.filterTabActive,
-            ]}
-            onPress={() => setActiveTab(type)}
-          >
-            <Text
-              style={[
-                styles.filterTabText,
-                activeTab === type && styles.filterTabTextActive,
-              ]}
-            >
-              {type === "ALL" ? "Todas" : type}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {!showForm ? (
+        <>
+          <View style={styles.filterTabs}>
+            {(["ALL", "ENTRADA", "RETIRADA"] as const).map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.filterTab,
+                  activeTab === type && styles.filterTabActive,
+                ]}
+                onPress={() => setActiveTab(type)}
+              >
+                <Text
+                  style={[
+                    styles.filterTabText,
+                    activeTab === type && styles.filterTabTextActive,
+                  ]}
+                >
+                  {type === "ALL" ? "Todas" : type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-      <View style={styles.actionBar}>
-        <Button
-          title={showForm ? "Cancelar" : "+ Adicionar Movimentação"}
-          variant={showForm ? "secondary" : "primary"}
-          size="md"
-          onPress={() => setShowForm(!showForm)}
-          style={{ flex: 1 }}
-        />
-      </View>
+          <View style={styles.actionBar}>
+            <Button
+              title="+ Registrar Movimentação"
+              variant="primary"
+              size="md"
+              onPress={() => setShowForm(true)}
+              style={{ flex: 1 }}
+            />
+          </View>
 
-      {showForm && (
+          {/* Lista de Movimentações */}
+          {isLoadingMovimentacoes && !isRefreshing ? (
+            <View style={styles.centerContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+            </View>
+          ) : movimentacoes.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>📋</Text>
+              <Text style={styles.emptyText}>
+                {activeTab === "ALL"
+                  ? "Nenhuma movimentação registrada"
+                  : `Nenhuma ${activeTab === "ENTRADA" ? "entrada" : "retirada"} registrada`}
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={movimentacoes}
+              renderItem={renderMovimentacaoItem}
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={styles.listContainer}
+              scrollEnabled={true}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  tintColor={Colors.primary}
+                />
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </>
+      ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
@@ -267,8 +328,6 @@ export default function MovimentacoesScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Card style={styles.formCard}>
-              <Text style={styles.formTitle}>Nova Movimentação</Text>
-
               {isLoadingOptions ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color={Colors.primary} />
@@ -312,14 +371,14 @@ export default function MovimentacoesScreen() {
 
                   {/* Quantidade */}
                   <Input
-                    label="Quantidade em grama"
+                    label={selectedUnit ? `Quantidade (${selectedUnit})` : "Quantidade"}
                     placeholder="Digite a quantidade"
                     keyboardType="decimal-pad"
                     value={
                       isQuantidadeFocused
                         ? formData.quantidade
                         : formData.quantidade
-                          ? `${formData.quantidade} g`
+                          ? `${formData.quantidade} ${selectedUnit || "g"}`
                           : ""
                     }
                     onFocus={() => setIsQuantidadeFocused(true)}
@@ -390,40 +449,6 @@ export default function MovimentacoesScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       )}
-
-      {/* Lista de Movimentações */}
-      {!showForm &&
-        (isLoadingMovimentacoes && !isRefreshing ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
-        ) : movimentacoes.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyText}>
-              {activeTab === "ALL"
-                ? "Nenhuma movimentação registrada"
-                : `Nenhuma ${activeTab === "ENTRADA" ? "entrada" : "retirada"
-                } registrada`}
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={movimentacoes}
-            renderItem={renderMovimentacaoItem}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.listContainer}
-            scrollEnabled={true}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                tintColor={Colors.primary}
-              />
-            }
-            showsVerticalScrollIndicator={false}
-          />
-        ))}
     </SafeAreaView>
   );
 }
@@ -599,5 +624,21 @@ const styles = StyleSheet.create({
   date: {
     fontSize: FontSize.xs,
     color: Colors.textTertiary,
+  },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  closeButton: {
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 36,
+    height: 36,
   },
 });

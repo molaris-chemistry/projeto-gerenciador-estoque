@@ -25,14 +25,13 @@ export const BarChart: React.FC<BarChartProps> = ({
   showValues = true,
 }) => {
   const max = maxValue ?? Math.max(...data.map(d => d.value), 1);
-  const BAR_AREA_WIDTH = 180;
 
   const animatedWidths = useRef(data.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     const animations = animatedWidths.map((anim, i) =>
       Animated.timing(anim, {
-        toValue: (data[i].value / max) * BAR_AREA_WIDTH,
+        toValue: (data[i].value / max) * 100,
         duration: 700 + i * 60,
         delay: i * 40,
         useNativeDriver: false,
@@ -59,7 +58,10 @@ export const BarChart: React.FC<BarChartProps> = ({
                   styles.bar,
                   {
                     height: barHeight,
-                    width: animatedWidths[i],
+                    width: animatedWidths[i].interpolate({
+                      inputRange: [0, 100],
+                      outputRange: ['0%', '100%'],
+                    }),
                     backgroundColor: color,
                     shadowColor: color,
                   },
