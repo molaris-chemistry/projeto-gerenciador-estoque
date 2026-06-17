@@ -37,7 +37,7 @@ public class MovimentacaoController {
                     || tipo != null || de != null || ate != null;
 
             List<MovimentacaoDTO> dtos = (hasFilters
-                    ? movimentacaoService.findFiltered(reagenteId, turmaId, materiaId, tipo, de, ate)
+                    ? movimentacaoService.findFiltered(reagenteId)
                     : movimentacaoService.findAll())
                     .stream()
                     .map(this::convertToDto)

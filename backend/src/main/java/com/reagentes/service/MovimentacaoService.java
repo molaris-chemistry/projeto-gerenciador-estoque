@@ -39,13 +39,8 @@ public class MovimentacaoService {
     }
 
     public List<Movimentacao> findFiltered(
-            Long reagenteId,
-            Long turmaId,
-            Long materiaId,
-            TipoMovimentacao tipo,
-            LocalDateTime de,
-            LocalDateTime ate) {
-        return movimentacaoRepository.findWithFilters(reagenteId, turmaId, materiaId, tipo, de, ate);
+            Long reagenteId) {
+        return movimentacaoRepository.findWithFilters(reagenteId);
     }
 
     public Optional<Movimentacao> findById(Long id) {

@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Redirect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Button, Input } from '@/components/ui';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,8 +20,13 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+
   if (isAuthenticated) {
-    return <Redirect href="/" />;
+    // If somehow already authenticated, navigate away. Note that doing this in a layout is usually better, but we keep this as a fallback.
+    setTimeout(() => {
+      router.replace('/');
+    }, 0);
   }
 
   const handleLogin = async () => {
@@ -33,6 +38,7 @@ export default function LoginScreen() {
       setIsLoading(true);
       setError(null);
       await login(email.trim().toLowerCase(), password);
+      router.replace('/');
     } catch (e: any) {
       const msg =
         e?.response?.data?.message ||

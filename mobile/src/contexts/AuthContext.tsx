@@ -6,10 +6,35 @@ import React, {
   useState,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { setAuthToken, setOnUnauthorized } from '@/services/api';
 import { loginApi, type AuthTokens } from '@/services/auth';
 
 const TOKEN_KEY = 'molaris_access_token';
+
+const setTokenAsync = async (key: string, value: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+};
+
+const getTokenAsync = async (key: string) => {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(key);
+  } else {
+    return await SecureStore.getItemAsync(key);
+  }
+};
+
+const deleteTokenAsync = async (key: string) => {
+  if (Platform.OS === 'web') {
+    localStorage.removeItem(key);
+  } else {
+    await SecureStore.deleteItemAsync(key);
+  }
+};
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -30,14 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    SecureStore.getItemAsync(TOKEN_KEY)
+    getTokenAsync(TOKEN_KEY)
       .then((token) => applyToken(token))
       .finally(() => setIsLoading(false));
   }, [applyToken]);
 
   useEffect(() => {
     setOnUnauthorized(() => {
-      SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+      deleteTokenAsync(TOKEN_KEY).catch(() => { });
       applyToken(null);
     });
   }, [applyToken]);
@@ -45,14 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const tokens: AuthTokens = await loginApi(email, password);
-      await SecureStore.setItemAsync(TOKEN_KEY, tokens.accessToken);
+      await setTokenAsync(TOKEN_KEY, tokens.accessToken);
       applyToken(tokens.accessToken);
     },
     [applyToken],
   );
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await deleteTokenAsync(TOKEN_KEY);
     applyToken(null);
   }, [applyToken]);
 
