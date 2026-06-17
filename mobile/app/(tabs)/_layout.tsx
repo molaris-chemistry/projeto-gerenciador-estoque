@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Redirect } from 'expo-router';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius as BorderRadius, Typography } from "@/constants/theme";
+import { useAuth } from '@/contexts/AuthContext';
+import { DashboardProvider } from '@/contexts/DashboardContext';
 import { useDashboard } from '@/contexts/DashboardContext';
+
 const FontSize = Typography.size;
 const FontWeight = Typography.weight;
 
@@ -84,6 +88,28 @@ const TabItem = React.forwardRef<View, TabItemProps>(
 );
 
 export default function TabLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+
+  return (
+    <DashboardProvider>
+      <AuthenticatedTabLayout />
+    </DashboardProvider>
+  );
+}
+
+function AuthenticatedTabLayout() {
   const { totalAlertas } = useDashboard();
 
   return (
@@ -104,6 +130,12 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
