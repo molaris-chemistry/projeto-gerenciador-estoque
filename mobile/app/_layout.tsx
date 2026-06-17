@@ -1,10 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { DashboardProvider } from '@/contexts/DashboardContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function RootLayout() {
   return (
-    <DashboardProvider>
+    <AuthProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -14,11 +14,12 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="login" />
         <Stack.Screen
           name="reagente/[id]"
           options={{ animation: 'slide_from_right' }}
         />
       </Stack>
-    </DashboardProvider>
+    </AuthProvider>
   );
 }

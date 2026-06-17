@@ -1,10 +1,19 @@
 import axios from 'axios';
 
-// Base URL do backend — ajustar conforme ambiente
-// Em desenvolvimento: usar IP da máquina (não localhost) para dispositivo físico
-const BASE_URL = __DEV__
-  ? 'http://192.168.1.100:3000/api'
+export const BASE_URL = __DEV__
+  ? 'http://192.168.1.100:8080/api'
   : 'https://api.molaris.com.br/api';
+
+let _token: string | null = null;
+let _onUnauthorized: (() => void) | null = null;
+
+export function setAuthToken(token: string | null): void {
+  _token = token;
+}
+
+export function setOnUnauthorized(handler: () => void): void {
+  _onUnauthorized = handler;
+}
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -15,9 +24,11 @@ export const api = axios.create({
   },
 });
 
-// Interceptor para log em dev
 api.interceptors.request.use(
   (config) => {
+    if (_token) {
+      config.headers.Authorization = `Bearer ${_token}`;
+    }
     if (__DEV__) {
       console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
     }
@@ -31,6 +42,9 @@ api.interceptors.response.use(
   (error) => {
     if (__DEV__) {
       console.error('[API Error]', error.response?.status, error.response?.data);
+    }
+    if (error.response?.status === 401) {
+      _onUnauthorized?.();
     }
     return Promise.reject(error);
   },
