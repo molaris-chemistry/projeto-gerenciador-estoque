@@ -60,12 +60,12 @@ export function isLowStock(
   return quantidade <= threshold;
 }
 
-export function isExpiringSoon(updatedAt?: string, staleDays: number = 180): boolean {
-  if (!updatedAt) return false;
-  const date = parseLocalDateTime(updatedAt);
+export function isExpiringSoon(dataValidade?: string, daysAhead: number = 90): boolean {
+  if (!dataValidade) return false;
+  const expiry = new Date(dataValidade);
   const now = new Date();
-  const diffDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-  return diffDays >= staleDays;
+  const diffDays = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= daysAhead; // expired or expiring within daysAhead days
 }
 
 export function toPercentage(value: number, total: number): number {

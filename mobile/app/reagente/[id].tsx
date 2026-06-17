@@ -14,12 +14,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
 import { AlertBadge, TimelineItem } from '@/components/ui';
-import { MOCK_REAGENTES, getMovimentacoesByReagente } from '@/data/mockData';
-import {
-  formatQuantidade,
-  isLowStock,
-  isExpiringSoon,
-} from '@/utils/formatters';
+import { fetchReagenteById } from '@/services/reagentes';
+import { fetchMovimentacoesByReagente } from '@/services/movimentacoes';
+import { formatQuantidade, isLowStock, isExpiringSoon } from '@/utils/formatters';
 import type { Reagente, Movimentacao } from '@/types';
 
 export default function ReagenteDetailScreen() {
@@ -31,36 +28,42 @@ export default function ReagenteDetailScreen() {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    await new Promise(resolve => setTimeout(resolve, 300)); // simulate network latency
-    const found = MOCK_REAGENTES.find(r => r.id === reagenteId) ?? null;
-    setReagente(found);
-    setMovimentacoes(getMovimentacoesByReagente(reagenteId));
+    setError(null);
+    const [r, movs] = await Promise.all([
+      fetchReagenteById(reagenteId),
+      fetchMovimentacoesByReagente(reagenteId),
+    ]);
+    setReagente(r);
+    setMovimentacoes(movs);
   }, [reagenteId]);
 
   useEffect(() => {
     setLoading(true);
-    loadData().finally(() => setLoading(false));
+    loadData()
+      .catch((e) => setError(e?.message ?? 'Erro ao carregar reagente'))
+      .finally(() => setLoading(false));
   }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData().catch((e) => setError(e?.message ?? 'Erro ao atualizar'));
     setRefreshing(false);
   }, [loadData]);
 
   const totalEntradas = movimentacoes
-    .filter(m => m.tipo === 'ENTRADA')
+    .filter((m) => m.tipo === 'ENTRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
   const totalSaidas = movimentacoes
-    .filter(m => m.tipo === 'RETIRADA')
+    .filter((m) => m.tipo === 'RETIRADA')
     .reduce((sum, m) => sum + m.quantidade, 0);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.loadingContainer}>
+        <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={Colors.cyan} />
           <Text style={styles.loadingText}>Carregando...</Text>
         </View>
@@ -68,12 +71,14 @@ export default function ReagenteDetailScreen() {
     );
   }
 
-  if (!reagente) {
+  if (error || !reagente) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.loadingContainer}>
+        <View style={styles.centerContainer}>
           <Text style={styles.errorIcon}>⚗️</Text>
-          <Text style={styles.errorTitle}>Reagente não encontrado</Text>
+          <Text style={styles.errorTitle}>
+            {error ?? 'Reagente não encontrado'}
+          </Text>
           <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
             <Text style={styles.backButtonText}>← Voltar</Text>
           </Pressable>
@@ -82,11 +87,12 @@ export default function ReagenteDetailScreen() {
     );
   }
 
-  const lowStock = isLowStock(reagente.quantidade);
-  const expiring = isExpiringSoon(undefined); // placeholder until backend exposes dataValidade
-  const unitColor = reagente.unidade === 'g' || reagente.unidade === 'kg'
-    ? Colors.cyan
-    : Colors.violet;
+  const lowStock = isLowStock(reagente.quantidade, reagente.quantidadeMinima ?? undefined);
+  const expiring = isExpiringSoon(reagente.dataValidade ?? undefined);
+  const unitColor =
+    reagente.unidade === 'g' || reagente.unidade === 'kg'
+      ? Colors.cyan
+      : Colors.violet;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -109,7 +115,12 @@ export default function ReagenteDetailScreen() {
         </Pressable>
 
         <View style={styles.hero}>
-          <View style={[styles.heroBubble, { backgroundColor: `${unitColor}20`, borderColor: `${unitColor}40` }]}>
+          <View
+            style={[
+              styles.heroBubble,
+              { backgroundColor: `${unitColor}20`, borderColor: `${unitColor}40` },
+            ]}
+          >
             <Text style={[styles.heroUnit, { color: unitColor }]}>
               {reagente.unidade}
             </Text>
@@ -124,9 +135,19 @@ export default function ReagenteDetailScreen() {
             </View>
           </View>
 
-          <View style={[styles.quantityCard, { borderColor: unitColor, backgroundColor: `${unitColor}10` }]}>
+          <View
+            style={[
+              styles.quantityCard,
+              { borderColor: unitColor, backgroundColor: `${unitColor}10` },
+            ]}
+          >
             <Text style={styles.quantityLabel}>Quantidade Atual</Text>
-            <Text style={[styles.quantityValue, { color: lowStock ? Colors.danger : unitColor }]}>
+            <Text
+              style={[
+                styles.quantityValue,
+                { color: lowStock ? Colors.danger : unitColor },
+              ]}
+            >
               {formatQuantidade(reagente.quantidade, reagente.unidade)}
             </Text>
           </View>
@@ -202,7 +223,12 @@ interface InfoTileProps {
   color?: string;
 }
 
-const InfoTile: React.FC<InfoTileProps> = ({ icon, label, value, color = Colors.textPrimary }) => (
+const InfoTile: React.FC<InfoTileProps> = ({
+  icon,
+  label,
+  value,
+  color = Colors.textPrimary,
+}) => (
   <View style={tileStyles.tile}>
     <Text style={tileStyles.icon}>{icon}</Text>
     <Text style={tileStyles.label}>{label}</Text>
@@ -244,8 +270,7 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: Spacing.xxxxxl,
   },
-
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -262,6 +287,8 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
     color: Colors.textPrimary,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.xl,
   },
   backButton: {
     paddingHorizontal: Spacing.xl,
@@ -276,7 +303,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.semibold,
     fontSize: Typography.size.sm,
   },
-
   backRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -295,7 +321,6 @@ const styles = StyleSheet.create({
     color: Colors.cyan,
     fontWeight: Typography.weight.semibold,
   },
-
   hero: {
     paddingHorizontal: Spacing.xl,
     gap: Spacing.lg,
@@ -332,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     borderWidth: 1.5,
     padding: Spacing.lg,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   quantityLabel: {
     fontSize: Typography.size.sm,
@@ -345,7 +370,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -1,
   },
-
   section: {
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
@@ -361,7 +385,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.sm,
   },
-
   timelineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -398,7 +421,6 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
   },
-
   footer: {
     height: Spacing.xxl,
   },

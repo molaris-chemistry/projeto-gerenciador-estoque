@@ -58,3 +58,15 @@ export async function fetchTurmas(): Promise<Turma[]> {
   const response = await api.get("/turmas");
   return response.data;
 }
+
+/**
+ * Busca movimentações de um reagente específico
+ */
+export async function fetchMovimentacoesByReagente(
+  reagenteId: number,
+): Promise<Movimentacao[]> {
+  const response = await api.get<Movimentacao[]>("/movimentacoes", {
+    params: { reagenteId },
+  });
+  return response.data;
+}

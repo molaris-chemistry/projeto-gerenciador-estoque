@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import { useRouter } from 'expo-router';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import { SearchBar } from '@/components/ui';
 import { ReagenteCard } from '@/components';
-import { MOCK_REAGENTES } from '@/data/mockData';
+import { fetchReagentes } from '@/services/movimentacoes';
+import { searchReagentes } from '@/services/reagentes';
 import { isLowStock } from '@/utils/formatters';
 import type { Reagente } from '@/types';
 
@@ -28,42 +29,66 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 export default function CatalogoScreen() {
   const router = useRouter();
 
-  const [reagentes, setReagentes] = useState<Reagente[]>(MOCK_REAGENTES);
+  const [allReagentes, setAllReagentes] = useState<Reagente[]>([]);
+  const [searchResults, setSearchResults] = useState<Reagente[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
-  const displayedReagentes = useMemo(() => {
-    let list = reagentes;
-
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(r => r.nome.toLowerCase().includes(q));
-    }
-
-    if (activeFilter === 'lowstock') {
-      list = list.filter(r => isLowStock(r.quantidade));
-    }
-
-    return list;
-  }, [reagentes, searchQuery, activeFilter]);
-
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-
-    if (text.trim().length > 1) {
-    } else if (text.trim().length === 0) {
-      setReagentes(MOCK_REAGENTES);
-    }
+  const loadAll = useCallback(async () => {
+    const data = await fetchReagentes();
+    setAllReagentes(data);
   }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    loadAll().finally(() => setLoading(false));
+  }, [loadAll]);
+
+  const handleSearchChange = useCallback(
+    async (text: string) => {
+      setSearchQuery(text);
+      if (text.trim().length < 2) {
+        setSearchResults(null);
+        return;
+      }
+      try {
+        setIsSearchLoading(true);
+        const results = await searchReagentes(text.trim());
+        setSearchResults(results);
+      } catch {
+        setSearchResults(null);
+      } finally {
+        setIsSearchLoading(false);
+      }
+    },
+    [],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setReagentes(MOCK_REAGENTES);
-    setRefreshing(false);
-  }, []);
+    try {
+      await loadAll();
+      if (searchQuery.trim().length >= 2) {
+        const results = await searchReagentes(searchQuery.trim());
+        setSearchResults(results);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadAll, searchQuery]);
+
+  const displayedReagentes = useMemo(() => {
+    const base = searchResults ?? allReagentes;
+    if (activeFilter === 'lowstock') {
+      return base.filter((r) =>
+        isLowStock(r.quantidade, r.quantidadeMinima ?? undefined),
+      );
+    }
+    return base;
+  }, [allReagentes, searchResults, activeFilter]);
 
   const handleCardPress = useCallback(
     (reagenteId: number) => {
@@ -76,7 +101,7 @@ export default function CatalogoScreen() {
     () => (
       <View>
         <View style={styles.filterRow}>
-          {FILTER_TABS.map(tab => (
+          {FILTER_TABS.map((tab) => (
             <Pressable
               key={tab.key}
               onPress={() => setActiveFilter(tab.key)}
@@ -97,10 +122,12 @@ export default function CatalogoScreen() {
             </Pressable>
           ))}
         </View>
-
         <Text style={styles.resultCount}>
-          {displayedReagentes.length} reagente{displayedReagentes.length !== 1 ? 's' : ''}
-          {activeFilter === 'lowstock' ? ' com estoque baixo' : ' encontrado' + (displayedReagentes.length !== 1 ? 's' : '')}
+          {displayedReagentes.length} reagente
+          {displayedReagentes.length !== 1 ? 's' : ''}
+          {activeFilter === 'lowstock'
+            ? ' com estoque baixo'
+            : ' encontrado' + (displayedReagentes.length !== 1 ? 's' : '')}
         </Text>
       </View>
     ),
@@ -145,11 +172,11 @@ export default function CatalogoScreen() {
       />
 
       <FlatList
-        data={displayedReagentes}
+        data={loading ? [] : displayedReagentes}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
+        ListEmptyComponent={loading ? null : renderEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -174,7 +201,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
   screenHeader: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
@@ -191,7 +217,6 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: 2,
   },
-
   filterRow: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
@@ -220,7 +245,6 @@ const styles = StyleSheet.create({
     color: Colors.cyan,
     fontWeight: Typography.weight.semibold,
   },
-
   resultCount: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.sm,
@@ -228,11 +252,9 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontWeight: Typography.weight.medium,
   },
-
   listContent: {
     paddingBottom: Spacing.xxxxxl,
   },
-
   emptyState: {
     alignItems: 'center',
     paddingTop: Spacing.xxxxxl,
