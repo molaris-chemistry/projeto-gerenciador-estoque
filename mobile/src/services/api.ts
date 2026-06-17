@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const BASE_URL = __DEV__
-  ? 'http://192.168.1.100:8080/api'
+  ? 'http://localhost:8080/api'
   : 'https://api.molaris.com.br/api';
 
 let _token: string | null = null;

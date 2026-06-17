@@ -24,6 +24,7 @@ public interface ReagenteRepository extends JpaRepository<Reagente, Long> {
 
     List<Reagente> findByDataValidadeLessThanEqualAndDataValidadeIsNotNullOrderByDataValidadeAsc(LocalDate data);
 
+    @Query("SELECT r FROM Reagente r WHERE r.quantidadeMinima IS NOT NULL AND r.quantidade <= r.quantidadeMinima ORDER BY r.nome ASC")
     List<Reagente> findByQuantidadeLessThanEqualQuantidadeMinimaAndQuantidadeMinimaIsNotNullOrderByNomeAsc();
 
     @Query("SELECT r FROM Reagente r WHERE r.quantidade < :limite")

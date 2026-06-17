@@ -3,9 +3,9 @@ spring:
     name: reagentes-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/reagentes_db
+    url: jdbc:postgresql://localhost:5433/reagentes_db
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -28,7 +28,7 @@ logging:
     org.springframework.context: DEBUG
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:secret}
   issuer: ${JWT_ISSUER:project}
   expiration-time-in-days: ${JWT_EXPIRATION_TIME_IN_DAYS:7}
 

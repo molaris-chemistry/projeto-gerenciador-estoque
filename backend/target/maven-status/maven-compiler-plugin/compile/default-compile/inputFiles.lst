@@ -1,25 +1,43 @@
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\MateriaController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\MovimentacaoController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\ReagenteController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\RelatorioController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\TesteController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\controller\TurmaController.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\cors\CorsConfig.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\dto\MateriaDTO.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\dto\MovimentacaoDTO.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\dto\ReagenteDTO.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\dto\TurmaDTO.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\model\Materia.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\model\Movimentacao.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\model\Reagente.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\model\Turma.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\ReagentesApiApplication.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\repository\MateriaRepository.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\repository\MovimentacaoRepository.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\repository\ReagenteRepository.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\repository\TurmaRepository.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\service\MateriaService.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\service\MovimentacaoService.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\service\ReagenteService.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\service\RelatorioService.java
-E:\tcc cripa\api att otavio\reagentes-api\src\main\java\com\reagentes\service\TurmaService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\AuthController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\MateriaController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\MovimentacaoController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\ReagenteController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\RelatorioController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\TesteController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\TurmaController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\controller\UserController.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\cors\CorsConfig.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\AlertasResponseDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\auth\AuthRequest.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\auth\AuthResponse.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\auth\RegisterRequest.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\MateriaDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\MovimentacaoDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\ReagenteDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\TurmaDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\dto\UserDTO.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\infra\exception\ApiException.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\infra\exception\ApiExceptionHandler.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\infra\security\SecurityConfiguration.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\infra\security\SecurityFilter.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\Materia.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\Movimentacao.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\Reagente.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\TipoMovimentacao.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\Turma.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\user\User.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\model\user\UserRole.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\ReagentesApiApplication.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\repository\MateriaRepository.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\repository\MovimentacaoRepository.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\repository\ReagenteRepository.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\repository\TurmaRepository.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\repository\UserRepository.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\auth\AuthService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\auth\JWTService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\MateriaService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\MovimentacaoService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\ReagenteService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\RelatorioService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\TurmaService.java
+C:\dev\projeto-gerenciador-estoque\backend\src\main\java\com\reagentes\service\UserService.java

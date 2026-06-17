@@ -15,6 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import lombok.RequiredArgsConstructor;
 
+import static org.springframework.http.HttpMethod.OPTIONS;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class SecurityConfiguration {
         .requestMatchers(HttpMethod.GET, "/api/movimentacoes/**").authenticated()
         .requestMatchers(HttpMethod.POST, "/api/movimentacoes").hasRole("PROFESSOR")
         .requestMatchers(HttpMethod.DELETE, "/api/movimentacoes/**").hasRole("PROFESSOR")
-        .anyRequest().authenticated()
+              .requestMatchers(OPTIONS).permitAll().anyRequest().authenticated()
       )
       .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
       .build();

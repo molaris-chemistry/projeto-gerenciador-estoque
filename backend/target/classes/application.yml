@@ -3,10 +3,10 @@ spring:
     name: reagentes-api
 
   datasource:
-    url: jdbc:mysql://localhost:3306/reagentes_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: root
-    password: Pedrohv2016
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5433/reagentes_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     show-sql: true
@@ -28,6 +28,9 @@ logging:
     org.springframework.context: DEBUG
 
 jwt:
-  secret: ${JWT_SECRET:my-secret-key}
+  secret: ${JWT_SECRET:secret}
   issuer: ${JWT_ISSUER:project}
   expiration-time-in-days: ${JWT_EXPIRATION_TIME_IN_DAYS:7}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8081,http://localhost:19000,http://localhost:19006}

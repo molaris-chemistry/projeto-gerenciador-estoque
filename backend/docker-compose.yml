@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://$${DATABASE_HOST:postgres}:5432/$${DATABASE_NAME:reagentes_db}?sslmode=prefer
+      - SPRING_DATASOURCE_USERNAME=$${DATABASE_USER:postgres}
+      - SPRING_DATASOURCE_PASSWORD=$${DATABASE_PASSWORD:postgres}
+      - SERVER_PORT=8080
+      - JWT_SECRET=$${JWT_SECRET:secret}
+      - JWT_EXPIRATION_TIME_IN_DAYS=$${JWT_EXPIRATION_TIME_IN_DAYS:7}
+      - JWT_ISSUER=$${JWT_ISSUER:default}
+    restart: unless-stopped
+  db:
+    image: postgres:15
+    environment:
+      - TZ=America/Sao_Paulo
+      - POSTGRES_DB=reagentes_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
