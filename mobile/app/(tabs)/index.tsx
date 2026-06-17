@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import { SearchBar } from '@/components/ui';
@@ -43,10 +43,21 @@ export default function CatalogoScreen() {
     setAllReagentes(data);
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    loadAll().finally(() => setLoading(false));
-  }, [loadAll]);
+  useFocusEffect(
+    useCallback(() => {
+      // Carrega os dados de fundo sem tela de loading travante se já tiver dados
+      loadAll().finally(() => {
+        if (loading) setLoading(false);
+      });
+      
+      // Atualiza resultados de busca se houver
+      if (searchQuery.trim().length >= 2) {
+        searchReagentes(searchQuery.trim())
+          .then(setSearchResults)
+          .catch(() => setSearchResults(null));
+      }
+    }, [loadAll, searchQuery, loading])
+  );
 
   const handleSearchChange = useCallback(
     async (text: string) => {

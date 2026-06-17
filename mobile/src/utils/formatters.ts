@@ -15,15 +15,25 @@ export function formatQuantidade(quantidade: number, unidade: string): string {
   return `${display} ${unidade}`;
 }
 
-export function parseLocalDateTime(dateStr: string): Date {
-  if (!dateStr) return new Date(0);
-  const normalized = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
-  return new Date(normalized);
+export function parseLocalDateTime(dateValue: any): Date {
+  if (!dateValue) return new Date(0);
+
+  if (Array.isArray(dateValue)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = dateValue;
+    return new Date(year, month - 1, day, hour, minute, second);
+  }
+
+  if (typeof dateValue === 'string') {
+    const normalized = dateValue.endsWith('Z') ? dateValue : `${dateValue}Z`;
+    return new Date(normalized);
+  }
+
+  return new Date(dateValue);
 }
 
-export function formatDataMovimentacao(dateStr: string): string {
-  if (!dateStr) return '—';
-  const date = parseLocalDateTime(dateStr);
+export function formatDataMovimentacao(dateValue: any): string {
+  if (!dateValue) return '—';
+  const date = parseLocalDateTime(dateValue);
   const pad = (n: number) => String(n).padStart(2, '0');
   return (
     `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}` +
@@ -31,9 +41,9 @@ export function formatDataMovimentacao(dateStr: string): string {
   );
 }
 
-export function getRelativeTime(dateStr: string): string {
-  if (!dateStr) return '—';
-  const date = parseLocalDateTime(dateStr);
+export function getRelativeTime(dateValue: any): string {
+  if (!dateValue) return '—';
+  const date = parseLocalDateTime(dateValue);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
