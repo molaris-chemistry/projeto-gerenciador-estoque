@@ -1,20 +1,13 @@
 # Gerenciador de Estoque de Laboratório
 
-Sistema para controle de substâncias, vidrarias e equipamentos de laboratório escolar. Professores cadastram e gerenciam o estoque; alunos e outros usuários consultam o que está disponível.
+Sistema para controle de substâncias de laboratório quimico. Tecnicos cadastram e gerenciam o estoque; professores consultam o que está disponível.
 
 ## Visão Geral
 
 | Role | O que pode fazer |
 |------|-----------------|
-| **Técnico** | Gerenciar usuários, categorias, aprovar ordens de serviço, receber devoluções |
-| **Professor** | Cadastrar/editar substâncias, solicitar alocações, concluir uso |
-| **Aluno** | Visualizar catálogo (somente leitura) |
-
-## Fluxo de Alocação
-
-```
-Professor solicita OS → Técnico aprova → Professor conclui uso → Técnico recebe devolução
-```
+| **Técnico** | Cadastra, Edita, Apaga e registra novas substancias e movimentações, gera relatorios gerais e semestrais visualiza o que tem em estoque |
+| **Professor** | Visualiza o que tem em estoque e Registra novas movimentações |
 
 ## Tech Stack
 
@@ -61,7 +54,7 @@ npm install
 npm run dev
 ```
 
-App disponível em `http://localhost:3000`
+App disponível em `http://localhost:8081`
 
 ### 4. Mobile
 
@@ -98,5 +91,5 @@ Criados automaticamente pelo `DataInitializer` na primeira execução:
 
 | Email | Senha | Role |
 |-------|-------|------|
-| `tecnico@etec.com` | `123456` | TECNICO |
+| `matoso@etec.com` | `123456` | TECNICO |
 | `professor@etec.com` | `123456` | PROFESSOR |
