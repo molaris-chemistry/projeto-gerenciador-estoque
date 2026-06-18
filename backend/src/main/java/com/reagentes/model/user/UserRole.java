@@ -1,6 +1,7 @@
 package com.reagentes.model.user;
 
 public enum UserRole {
+  TECNICO("tecnico"),
   PROFESSOR("professor"),
   ALUNO("aluno");
 

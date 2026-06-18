@@ -39,6 +39,6 @@ public class AuthController {
     String accessToken = jwtService.generateToken(user);
     String refreshToken = jwtService.generateRefreshToken(user);
 
-    return ResponseEntity.ok(AuthResponse.of(accessToken, refreshToken));
+    return ResponseEntity.ok(AuthResponse.of(accessToken, refreshToken, user.getRole()));
   }
 }

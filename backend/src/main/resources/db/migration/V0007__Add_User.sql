@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 INSERT INTO users (name, email, password, role)
-VALUES ('Administrador', 'admin@admin.com', '$2a$10$jdRHn.BzY1gR/S0DdSaPxOtWy2tDmKaJcNCPGSJWvdqvt/5/W9/oi', 0);
+VALUES ('Administrador', 'admin@admin.com', '$2a$10$83Bgzxbsv/4JFHSNjTd8vuJx49vIGXwQI8qJf4NRtQAZSGN/9CVGm', 0);

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +16,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card, Input, Picker } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
+import { scrollableListStyle, scrollableScreen } from "@/constants/layout";
+import { getApiErrorMessage } from "@/services/api";
+import { confirmDestructive } from "@/utils/confirm";
 import {
   Radius as BorderRadius,
   Colors,
@@ -26,6 +31,7 @@ const FontSize = Typography.size;
 const FontWeight = Typography.weight;
 import {
   createMovimentacao,
+  deleteMovimentacao,
   fetchMaterias,
   fetchMovimentacoes,
   fetchReagentes,
@@ -36,6 +42,8 @@ import type { Materia, Movimentacao, Reagente, Turma } from "@/types";
 type MovementType = "ENTRADA" | "RETIRADA" | "ALL";
 
 export default function MovimentacoesScreen() {
+  const { isAdmin, isTeacher } = useAuth();
+  const canRegister = isAdmin || isTeacher;
   const [activeTab, setActiveTab] = useState<MovementType>("ALL");
 
   const [formData, setFormData] = useState({
@@ -63,28 +71,35 @@ export default function MovimentacoesScreen() {
   const selectedReagente = reagentes.find((r) => String(r.id) === formData.reagenteId);
   const selectedUnit = selectedReagente ? selectedReagente.unidade : "";
 
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        setIsLoadingOptions(true);
-        const [reagentesData, materiasData, turmasData] = await Promise.all([
-          fetchReagentes(),
-          fetchMaterias(),
-          fetchTurmas(),
-        ]);
-        setReagentes(reagentesData);
-        setMaterias(materiasData);
-        setTurmas(turmasData);
-      } catch (error) {
-        console.error("Erro ao carregar opções:", error);
-        Alert.alert("Erro", "Não foi possível carregar as opções");
-      } finally {
-        setIsLoadingOptions(false);
-      }
-    };
-
-    loadOptions();
+  const loadOptions = useCallback(async () => {
+    try {
+      setIsLoadingOptions(true);
+      const [reagentesData, materiasData, turmasData] = await Promise.all([
+        fetchReagentes(),
+        fetchMaterias(),
+        fetchTurmas(),
+      ]);
+      setReagentes(reagentesData);
+      setMaterias(materiasData);
+      setTurmas(turmasData);
+    } catch (error) {
+      console.error("Erro ao carregar opções:", error);
+      Alert.alert("Erro", "Não foi possível carregar as opções");
+    } finally {
+      setIsLoadingOptions(false);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadOptions();
+    }, [loadOptions]),
+  );
+
+  const handleOpenForm = useCallback(async () => {
+    await loadOptions();
+    setShowForm(true);
+  }, [loadOptions]);
 
   const loadMovimentacoes = useCallback(async () => {
     try {
@@ -95,7 +110,10 @@ export default function MovimentacoesScreen() {
       setMovimentacoes(filtered);
     } catch (error) {
       console.error("Erro ao carregar movimentações:", error);
-      Alert.alert("Erro", "Não foi possível carregar as movimentações");
+      Alert.alert(
+        "Erro",
+        getApiErrorMessage(error, "Não foi possível carregar as movimentações"),
+      );
     } finally {
       setIsLoadingMovimentacoes(false);
     }
@@ -158,12 +176,34 @@ export default function MovimentacoesScreen() {
       console.error("Erro ao criar movimentação:", error);
       Alert.alert(
         "Erro",
-        "Não foi possível registrar a movimentação. Tente novamente.",
+        getApiErrorMessage(error, "Não foi possível registrar a movimentação. Tente novamente."),
       );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleDeleteMovimentacao = useCallback(
+    (item: Movimentacao) => {
+      confirmDestructive({
+        title: "Excluir movimentação",
+        message: `Deseja excluir a movimentação de "${item.reagenteNome}"? O estoque será revertido.`,
+        onConfirm: async () => {
+          try {
+            await deleteMovimentacao(item.id);
+            Alert.alert("Sucesso", "Movimentação excluída");
+            await loadMovimentacoes();
+          } catch (error) {
+            Alert.alert(
+              "Erro",
+              getApiErrorMessage(error, "Não foi possível excluir a movimentação"),
+            );
+          }
+        },
+      });
+    },
+    [loadMovimentacoes],
+  );
 
   const getTypeColor = (tipo: "ENTRADA" | "RETIRADA") => {
     return tipo === "ENTRADA" ? Colors.success : Colors.error;
@@ -198,9 +238,20 @@ export default function MovimentacoesScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.quantityContainer}>
-          <Text style={styles.quantity}>{item.quantidade}</Text>
-          <Text style={styles.unit}>{item.unidade}</Text>
+        <View style={styles.headerActions}>
+          <View style={styles.quantityContainer}>
+            <Text style={styles.quantity}>{item.quantidade}</Text>
+            <Text style={styles.unit}>{item.unidade}</Text>
+          </View>
+          {isAdmin && (
+            <TouchableOpacity
+              onPress={() => handleDeleteMovimentacao(item)}
+              hitSlop={8}
+              style={styles.deleteButton}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.error} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -221,7 +272,7 @@ export default function MovimentacoesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {!showForm ? (
+      {!showForm || !canRegister ? (
         <>
           {/* Lista de Movimentações */}
           {isLoadingMovimentacoes && !isRefreshing ? (
@@ -238,11 +289,12 @@ export default function MovimentacoesScreen() {
             </View>
           ) : (
             <FlatList
+              style={scrollableListStyle}
               data={movimentacoes}
               renderItem={renderMovimentacaoItem}
               keyExtractor={(item) => String(item.id)}
               contentContainerStyle={styles.listContainer}
-              scrollEnabled={true}
+              nestedScrollEnabled
               ListHeaderComponent={
                 <View>
                   <View style={styles.header}>
@@ -275,13 +327,15 @@ export default function MovimentacoesScreen() {
                   </View>
 
                   <View style={styles.actionBar}>
-                    <Button
-                      title="+ Registrar Movimentação"
-                      variant="primary"
-                      size="md"
-                      onPress={() => setShowForm(true)}
-                      style={{ flex: 1 }}
-                    />
+                    {canRegister && (
+                      <Button
+                        title="+ Registrar Movimentação"
+                        variant="primary"
+                        size="md"
+                        onPress={handleOpenForm}
+                        style={{ flex: 1 }}
+                      />
+                    )}
                   </View>
                 </View>
               }
@@ -467,7 +521,7 @@ export default function MovimentacoesScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    ...scrollableScreen,
     backgroundColor: Colors.background,
   },
   header: {
@@ -600,6 +654,14 @@ const styles = StyleSheet.create({
   materiaTurma: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  deleteButton: {
+    padding: Spacing.xs,
   },
   quantityContainer: {
     alignItems: "flex-end",

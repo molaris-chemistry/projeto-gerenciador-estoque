@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import com.reagentes.dto.auth.AuthRequest;
 import com.reagentes.dto.auth.RegisterRequest;
 import com.reagentes.model.user.User;
-import com.reagentes.model.user.UserRole;
 import com.reagentes.repository.UserRepository;
 import com.reagentes.infra.exception.ApiException;
 
@@ -20,23 +19,7 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
 
   public void register(RegisterRequest request) {
-    String normalizedName = normalizeName(request.name());
-    String normalizedEmail = normalizeEmail(request.email());
-    
-    if (userRepository.existsByEmail(normalizedEmail)) {
-      throw ApiException.conflict("Esse e-mail já está em uso");
-    }
-
-    var encryptedPassword = passwordEncoder.encode(request.password());
-
-    User user = User.builder()
-      .name(normalizedName)
-      .email(normalizedEmail)
-      .password(encryptedPassword)
-      .role(UserRole.ALUNO)
-      .build();
-
-    userRepository.save(user);
+    throw ApiException.forbidden("Cadastro público desabilitado. Use uma conta pré-cadastrada.");
   }
 
   public User login(AuthRequest request) {
@@ -53,9 +36,5 @@ public class AuthService {
 
   private String normalizeEmail(String email){
     return email.trim().toLowerCase();
-  }
-
-  private String normalizeName(String name){
-    return name.trim().replaceAll("\\s+", " ");
   }
 }

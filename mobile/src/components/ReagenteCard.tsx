@@ -20,8 +20,8 @@ export const ReagenteCard: React.FC<ReagenteCardProps> = ({ reagente, onPress })
     Animated.spring(scaleAnim, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true }).start();
   };
 
-  const lowStock = isLowStock(reagente.quantidade);
-  const expiringSoon = isExpiringSoon(undefined);
+  const lowStock = isLowStock(reagente.quantidade, reagente.quantidadeMinima ?? undefined);
+  const expiringSoon = isExpiringSoon(reagente.dataValidade);
 
   const unitColor = UnitColorMap[reagente.unidade] ?? Colors.cyan;
 

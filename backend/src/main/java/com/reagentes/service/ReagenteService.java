@@ -11,11 +11,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReagenteService {
 
     private static final int DIAS_ANTECEDENCIA_VENCIMENTO = 30;
+    private static final BigDecimal DEFAULT_QUANTIDADE_MINIMA = BigDecimal.valueOf(5.0);
 
     @Autowired
     private ReagenteRepository reagenteRepository;
@@ -86,7 +88,14 @@ public class ReagenteService {
     }
 
     public List<Reagente> findReagentesComEstoqueMinimo() {
-        return reagenteRepository.findByQuantidadeLessThanEqualQuantidadeMinimaAndQuantidadeMinimaIsNotNullOrderByNomeAsc();
+        return reagenteRepository.findAllByOrderByNomeAsc().stream()
+                .filter(reagente -> {
+                    BigDecimal minimo = reagente.getQuantidadeMinima() != null
+                            ? reagente.getQuantidadeMinima()
+                            : DEFAULT_QUANTIDADE_MINIMA;
+                    return reagente.getQuantidade().compareTo(minimo) <= 0;
+                })
+                .collect(Collectors.toList());
     }
 }
 

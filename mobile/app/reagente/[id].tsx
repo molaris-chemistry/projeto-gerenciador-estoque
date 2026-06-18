@@ -8,19 +8,24 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
-import { AlertBadge, TimelineItem } from '@/components/ui';
-import { fetchReagenteById } from '@/services/reagentes';
+import { AlertBadge, TimelineItem, Button } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchReagenteById, deleteReagente } from '@/services/reagentes';
 import { fetchMovimentacoesByReagente } from '@/services/movimentacoes';
+import { getApiErrorMessage } from '@/services/api';
+import { confirmDestructive } from '@/utils/confirm';
 import { formatQuantidade, isLowStock, isExpiringSoon } from '@/utils/formatters';
 import type { Reagente, Movimentacao } from '@/types';
 
 export default function ReagenteDetailScreen() {
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
   const reagenteId = Number(id);
 
@@ -52,6 +57,29 @@ export default function ReagenteDetailScreen() {
     await loadData().catch((e) => setError(e?.message ?? 'Erro ao atualizar'));
     setRefreshing(false);
   }, [loadData]);
+
+  const handleDeletePress = useCallback(() => {
+    if (!reagente) return;
+    confirmDestructive({
+      title: 'Excluir reagente',
+      message: `Deseja excluir "${reagente.nome}"? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          await deleteReagente(reagente.id);
+          Alert.alert('Sucesso', 'Reagente excluído com sucesso');
+          router.replace('/');
+        } catch (error) {
+          Alert.alert(
+            'Erro',
+            getApiErrorMessage(
+              error,
+              'Não foi possível excluir o reagente. Verifique se não há movimentações vinculadas.',
+            ),
+          );
+        }
+      },
+    });
+  }, [reagente, router]);
 
   const totalEntradas = movimentacoes
     .filter((m) => m.tipo === 'ENTRADA')
@@ -209,6 +237,25 @@ export default function ReagenteDetailScreen() {
             </View>
           )}
         </View>
+
+        {isAdmin && (
+          <View style={styles.adminActions}>
+            <Button
+              title="Editar"
+              variant="outline"
+              size="md"
+              onPress={() => router.push(`/reagente/${reagenteId}/editar`)}
+              style={styles.adminButton}
+            />
+            <Button
+              title="Excluir"
+              variant="ghost"
+              size="md"
+              onPress={handleDeletePress}
+              style={styles.adminButton}
+            />
+          </View>
+        )}
 
         <View style={styles.footer} />
       </ScrollView>
@@ -420,6 +467,15 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     color: Colors.textMuted,
     textAlign: 'center',
+  },
+  adminActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.xl,
+  },
+  adminButton: {
+    flex: 1,
   },
   footer: {
     height: Spacing.xxl,

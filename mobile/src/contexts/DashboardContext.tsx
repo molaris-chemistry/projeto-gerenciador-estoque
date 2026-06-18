@@ -6,9 +6,13 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { fetchMovimentacoes, fetchReagentes } from "@/services/movimentacoes";
-import { EMPTY_ALERTAS, fetchAlertas } from "@/services/reagentes";
-import type { AlertasResponse } from "@/types";
+import {
+  EMPTY_ALERTAS,
+  fetchDashboardMovimentacoes,
+  fetchDashboardReagentes,
+} from "@/services/dashboard";
+import { isExpiringSoon, isLowStock } from "@/utils/formatters";
+import type { AlertasResponse, Reagente } from "@/types";
 
 interface DashboardContextValue {
   totalReagentes: number;
@@ -24,6 +28,16 @@ interface DashboardContextValue {
 const DashboardContext = createContext<DashboardContextValue | undefined>(
   undefined,
 );
+
+function buildAlertas(reagentes: Reagente[]): AlertasResponse {
+  const estoqueMinimo = reagentes.filter((r) =>
+    isLowStock(r.quantidade, r.quantidadeMinima ?? undefined),
+  );
+  const vencendo = reagentes.filter((r) =>
+    isExpiringSoon(r.dataValidade),
+  );
+  return { vencendo, estoqueMinimo };
+}
 
 function isSameLocalDay(iso: string, ref: Date): boolean {
   const d = new Date(iso);
@@ -48,17 +62,16 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     else setIsLoading(true);
     setError(null);
 
-    const [reagentesRes, movimentacoesRes, alertasRes] =
-      await Promise.allSettled([
-        fetchReagentes(),
-        fetchMovimentacoes(),
-        fetchAlertas(),
-      ]);
+    const [reagentesRes, movimentacoesRes] = await Promise.allSettled([
+      fetchDashboardReagentes(),
+      fetchDashboardMovimentacoes(),
+    ]);
 
     let hadError = false;
 
     if (reagentesRes.status === "fulfilled") {
       setTotalReagentes(reagentesRes.value.length);
+      setAlertas(buildAlertas(reagentesRes.value));
     } else {
       hadError = true;
       console.error("Erro ao carregar reagentes:", reagentesRes.reason);
@@ -73,13 +86,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     } else {
       hadError = true;
       console.error("Erro ao carregar movimentações:", movimentacoesRes.reason);
-    }
-
-    if (alertasRes.status === "fulfilled") {
-      setAlertas(alertasRes.value);
-    } else {
-      hadError = true;
-      console.error("Erro ao carregar alertas:", alertasRes.reason);
     }
 
     if (hadError) {

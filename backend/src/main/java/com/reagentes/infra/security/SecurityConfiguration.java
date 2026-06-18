@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import lombok.RequiredArgsConstructor;
 
 import static org.springframework.http.HttpMethod.OPTIONS;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -27,20 +28,29 @@ public class SecurityConfiguration {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     return httpSecurity
+      .cors(withDefaults())
       .csrf(csrf -> csrf.disable())
       .sessionManagement(session ->
         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
       )
       .authorizeHttpRequests(auth -> auth
         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/relatorios/**").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.POST, "/api/reagentes").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.PUT, "/api/reagentes/**").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.DELETE, "/api/reagentes/**").hasRole("TECNICO")
         .requestMatchers(HttpMethod.GET, "/api/reagentes/**").authenticated()
-        .requestMatchers(HttpMethod.POST, "/api/reagentes").hasRole("PROFESSOR")
-        .requestMatchers(HttpMethod.PUT, "/api/reagentes/**").hasRole("PROFESSOR")
-        .requestMatchers(HttpMethod.DELETE, "/api/reagentes/**").hasRole("PROFESSOR")
+        .requestMatchers(HttpMethod.POST, "/api/movimentacoes").hasAnyRole("TECNICO", "PROFESSOR")
+        .requestMatchers(HttpMethod.DELETE, "/api/movimentacoes/**").hasRole("TECNICO")
         .requestMatchers(HttpMethod.GET, "/api/movimentacoes/**").authenticated()
-        .requestMatchers(HttpMethod.POST, "/api/movimentacoes").hasRole("PROFESSOR")
-        .requestMatchers(HttpMethod.DELETE, "/api/movimentacoes/**").hasRole("PROFESSOR")
-              .requestMatchers(OPTIONS).permitAll().anyRequest().authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/materias").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.DELETE, "/api/materias/**").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.GET, "/api/materias/**").authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/turmas").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.DELETE, "/api/turmas/**").hasRole("TECNICO")
+        .requestMatchers(HttpMethod.GET, "/api/turmas/**").authenticated()
+        .requestMatchers(OPTIONS).permitAll()
+        .anyRequest().authenticated()
       )
       .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
       .build();

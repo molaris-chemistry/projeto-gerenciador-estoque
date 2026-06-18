@@ -3,12 +3,15 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { setAuthToken, setOnUnauthorized } from '@/services/api';
-import { loginApi, type AuthTokens } from '@/services/auth';
+import { loginApi } from '@/services/auth';
+import { fetchCurrentUser } from '@/services/users';
+import type { User, UserRole } from '@/types';
 
 const TOKEN_KEY = 'molaris_access_token';
 
@@ -37,8 +40,12 @@ const deleteTokenAsync = async (key: string) => {
 };
 
 interface AuthContextValue {
+  user: User | null;
+  role: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
+  isTeacher: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -46,45 +53,82 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const applyToken = useCallback((token: string | null) => {
-    setAuthToken(token);
-    setIsAuthenticated(token !== null);
+  const clearSession = useCallback(() => {
+    setAuthToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+  }, []);
+
+  const loadProfile = useCallback(async () => {
+    const profile = await fetchCurrentUser();
+    setUser(profile);
+    setIsAuthenticated(true);
   }, []);
 
   useEffect(() => {
-    getTokenAsync(TOKEN_KEY)
-      .then((token) => applyToken(token))
-      .finally(() => setIsLoading(false));
-  }, [applyToken]);
+    (async () => {
+      try {
+        const token = await getTokenAsync(TOKEN_KEY);
+        if (!token) {
+          clearSession();
+          return;
+        }
+
+        setAuthToken(token);
+        await loadProfile();
+      } catch {
+        await deleteTokenAsync(TOKEN_KEY);
+        clearSession();
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [clearSession, loadProfile]);
 
   useEffect(() => {
     setOnUnauthorized(() => {
-      deleteTokenAsync(TOKEN_KEY).catch(() => { });
-      applyToken(null);
+      deleteTokenAsync(TOKEN_KEY).catch(() => {});
+      clearSession();
     });
-  }, [applyToken]);
+  }, [clearSession]);
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const tokens: AuthTokens = await loginApi(email, password);
+      const tokens = await loginApi(email, password);
       await setTokenAsync(TOKEN_KEY, tokens.accessToken);
-      applyToken(tokens.accessToken);
+      setAuthToken(tokens.accessToken);
+      await loadProfile();
     },
-    [applyToken],
+    [loadProfile],
   );
 
   const logout = useCallback(async () => {
     await deleteTokenAsync(TOKEN_KEY);
-    applyToken(null);
-  }, [applyToken]);
+    clearSession();
+  }, [clearSession]);
+
+  const role = user?.role ?? null;
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      role,
+      isAuthenticated,
+      isLoading,
+      isAdmin: role === 'TECNICO',
+      isTeacher: role === 'PROFESSOR',
+      login,
+      logout,
+    }),
+    [user, role, isAuthenticated, isLoading, login, logout],
+  );
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }
 

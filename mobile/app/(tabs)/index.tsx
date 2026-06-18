@@ -1,20 +1,28 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   FlatList,
+  ScrollView,
   StyleSheet,
   RefreshControl,
   StatusBar,
   Pressable,
-  ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
-import { SearchBar } from '@/components/ui';
+import {
+  scrollableListStyle,
+  scrollableScreen,
+  scrollViewStyle,
+  shouldClipListSubviews,
+} from '@/constants/layout';
+import { SearchBar, Button } from '@/components/ui';
 import { ReagenteCard } from '@/components';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchReagentes } from '@/services/movimentacoes';
 import { searchReagentes } from '@/services/reagentes';
 import { isLowStock } from '@/utils/formatters';
@@ -29,6 +37,7 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 
 export default function CatalogoScreen() {
   const router = useRouter();
+  const { isAdmin } = useAuth();
 
   const [allReagentes, setAllReagentes] = useState<Reagente[]>([]);
   const [searchResults, setSearchResults] = useState<Reagente[] | null>(null);
@@ -111,11 +120,22 @@ export default function CatalogoScreen() {
 
   const renderHeader = useCallback(
     () => (
-      <ScrollView>
+      <View>
         <View style={styles.screenHeader}>
           <Text style={styles.screenTitle}>Catálogo</Text>
           <Text style={styles.screenSubtitle}>Gestão de estoque químico</Text>
         </View>
+
+        {isAdmin && (
+          <View style={styles.adminAction}>
+            <Button
+              title="+ Cadastrar Reagente"
+              variant="primary"
+              size="md"
+              onPress={() => router.push('/reagente/novo')}
+            />
+          </View>
+        )}
 
         <SearchBar
           value={searchQuery}
@@ -153,9 +173,9 @@ export default function CatalogoScreen() {
             ? ' com estoque baixo'
             : ' encontrado' + (displayedReagentes.length !== 1 ? 's' : '')}
         </Text>
-      </ScrollView>
+      </View>
     ),
-    [activeFilter, displayedReagentes.length, searchQuery, isSearchLoading, handleSearchChange],
+    [activeFilter, displayedReagentes.length, searchQuery, isSearchLoading, handleSearchChange, isAdmin, router],
   );
 
   const renderEmpty = () => (
@@ -179,11 +199,46 @@ export default function CatalogoScreen() {
 
   const keyExtractor = useCallback((item: Reagente) => String(item.id), []);
 
+  const refreshControl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={Colors.cyan}
+      colors={[Colors.cyan]}
+    />
+  );
+
+  if (Platform.OS === 'web') {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+        <ScrollView
+          style={scrollViewStyle}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator
+          nestedScrollEnabled
+          refreshControl={refreshControl}
+        >
+          {renderHeader()}
+          {!loading && displayedReagentes.length === 0 && renderEmpty()}
+          {displayedReagentes.map((item) => (
+            <ReagenteCard
+              key={item.id}
+              reagente={item}
+              onPress={() => handleCardPress(item.id)}
+            />
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
 
       <FlatList
+        style={scrollableListStyle}
         data={loading ? [] : displayedReagentes}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -191,18 +246,12 @@ export default function CatalogoScreen() {
         ListEmptyComponent={loading ? null : renderEmpty}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.cyan}
-            colors={[Colors.cyan]}
-          />
-        }
+        nestedScrollEnabled
+        refreshControl={refreshControl}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
-        removeClippedSubviews={true}
+        removeClippedSubviews={shouldClipListSubviews}
       />
     </SafeAreaView>
   );
@@ -210,7 +259,7 @@ export default function CatalogoScreen() {
 
 const styles = StyleSheet.create({
   safe: {
-    flex: 1,
+    ...scrollableScreen,
     backgroundColor: Colors.background,
   },
   screenHeader: {
@@ -228,6 +277,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     color: Colors.textMuted,
     marginTop: 2,
+  },
+  adminAction: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.sm,
   },
   filterRow: {
     flexDirection: 'row',

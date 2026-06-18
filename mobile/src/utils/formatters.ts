@@ -62,6 +62,7 @@ export function getRelativeTime(dateValue: any): string {
 }
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5.0;
+export const EXPIRY_ALERT_DAYS = 30;
 
 export function isLowStock(
   quantidade: number,
@@ -70,12 +71,16 @@ export function isLowStock(
   return quantidade <= threshold;
 }
 
-export function isExpiringSoon(dataValidade?: string, daysAhead: number = 90): boolean {
+export function isExpiringSoon(
+  dataValidade?: string | null,
+  daysAhead: number = EXPIRY_ALERT_DAYS,
+): boolean {
   if (!dataValidade) return false;
   const expiry = new Date(dataValidade);
+  if (Number.isNaN(expiry.getTime())) return false;
   const now = new Date();
   const diffDays = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-  return diffDays <= daysAhead; // expired or expiring within daysAhead days
+  return diffDays <= daysAhead;
 }
 
 export function toPercentage(value: number, total: number): number {

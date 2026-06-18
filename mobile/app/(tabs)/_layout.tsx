@@ -4,6 +4,7 @@ import { Redirect } from 'expo-router';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Radius as BorderRadius, Typography } from "@/constants/theme";
+import { tabRootStyle } from '@/constants/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardProvider } from '@/contexts/DashboardContext';
 import { useDashboard } from '@/contexts/DashboardContext';
@@ -21,7 +22,7 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   {
-    name: 'Dashboard',
+    name: 'relatorios',
     href: '/relatorios',
     label: 'Dashboard',
     icon: 'speedometer-outline',
@@ -113,9 +114,9 @@ function AuthenticatedTabLayout() {
   const { totalAlertas } = useDashboard();
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
+    <View style={tabRootStyle}>
+      <Tabs style={tabRootStyle}>
+        <View style={styles.tabContent}>
           <TabSlot />
         </View>
         <TabList style={styles.tabBar}>
@@ -123,7 +124,7 @@ function AuthenticatedTabLayout() {
           <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
             <TabItem
               tab={tab}
-              badgeCount={tab.name.toLowerCase() === 'dashboard' ? totalAlertas : 0}
+              badgeCount={tab.name === 'relatorios' ? totalAlertas : 0}
             />
           </TabTrigger>
         ))}
@@ -139,6 +140,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.background,
+  },
+  tabContent: {
+    flex: 1,
+    minHeight: 0,
   },
   tabBar: {
     flexDirection: 'row',

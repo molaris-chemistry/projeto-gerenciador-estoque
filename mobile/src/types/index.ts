@@ -1,9 +1,27 @@
+export type UserRole = 'TECNICO' | 'PROFESSOR' | 'ALUNO';
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+}
+
 export interface Reagente {
   id: number;
   nome: string;
   quantidade: number;
   unidade: string;
   dataValidade?: string | null; // ISO date "YYYY-MM-DD"
+  quantidadeMinima?: number | null;
+}
+
+export interface ReagentePayload {
+  nome: string;
+  quantidade: number;
+  unidade: string;
+  dataValidade?: string | null;
   quantidadeMinima?: number | null;
 }
 

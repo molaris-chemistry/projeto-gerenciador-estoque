@@ -14,15 +14,15 @@ import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
 
-  if (isAuthenticated) {
+  if (!authLoading && isAuthenticated) {
     // If somehow already authenticated, navigate away. Note that doing this in a layout is usually better, but we keep this as a fallback.
     setTimeout(() => {
       router.replace('/');
@@ -35,7 +35,7 @@ export default function LoginScreen() {
       return;
     }
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       setError(null);
       await login(email.trim().toLowerCase(), password);
       router.replace('/');
@@ -46,7 +46,7 @@ export default function LoginScreen() {
         'Email ou senha incorretos';
       setError(String(msg));
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -97,8 +97,8 @@ export default function LoginScreen() {
               variant="primary"
               size="lg"
               onPress={handleLogin}
-              isLoading={isLoading}
-              disabled={isLoading}
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
               style={styles.button}
             />
           </View>

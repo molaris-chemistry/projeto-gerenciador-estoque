@@ -10,9 +10,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { scrollableScreen, scrollViewStyle } from '@/constants/layout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
+import { getApiErrorMessage } from '@/services/api';
 import type { Reagente } from '@/types';
 import {
   downloadRelatorioGeral,
@@ -66,6 +70,7 @@ function AlertaItem({
   const icon: keyof typeof Ionicons.glyphMap = isVencendo
     ? 'time-outline'
     : 'alert-circle-outline';
+  const threshold = reagente.quantidadeMinima ?? 5;
 
   return (
     <Card style={styles.alertaCard}>
@@ -78,10 +83,7 @@ function AlertaItem({
           <Text style={styles.alertaDetalhe}>
             {isVencendo
               ? `Validade: ${formatDateBR(reagente.dataValidade)}`
-              : `Estoque: ${reagente.quantidade} ${reagente.unidade}` +
-                (reagente.quantidadeMinima != null
-                  ? ` • mín. ${reagente.quantidadeMinima} ${reagente.unidade}`
-                  : '')}
+              : `Estoque: ${reagente.quantidade} ${reagente.unidade} • mín. ${threshold} ${reagente.unidade}`}
           </Text>
         </View>
         <View style={[styles.alertaTag, { backgroundColor: `${color}20` }]}>
@@ -105,6 +107,8 @@ export default function RelatoriosScreen() {
     error,
     refresh,
   } = useDashboard();
+  const { isAdmin, logout } = useAuth();
+  const router = useRouter();
 
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [loadingGeral, setLoadingGeral] = useState(false);
@@ -116,8 +120,8 @@ export default function RelatoriosScreen() {
       setLoadingGeral(true);
       setDownloadError(null);
       await downloadRelatorioGeral();
-    } catch (e: any) {
-      setDownloadError(e?.message ?? 'Erro ao baixar relatório geral');
+    } catch (e: unknown) {
+      setDownloadError(getApiErrorMessage(e, 'Erro ao baixar relatório geral'));
     } finally {
       setLoadingGeral(false);
     }
@@ -128,11 +132,16 @@ export default function RelatoriosScreen() {
       setLoadingSemestral(true);
       setDownloadError(null);
       await downloadRelatorioSemestral(selectedYear);
-    } catch (e: any) {
-      setDownloadError(e?.message ?? 'Erro ao baixar relatório semestral');
+    } catch (e: unknown) {
+      setDownloadError(getApiErrorMessage(e, 'Erro ao baixar relatório semestral'));
     } finally {
       setLoadingSemestral(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
   };
 
   const semAlertas = totalAlertas === 0;
@@ -145,9 +154,10 @@ export default function RelatoriosScreen() {
         </View>
       ) : (
         <ScrollView
-          style={{ flex: 1 }}
+          style={scrollViewStyle}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator
+          nestedScrollEnabled
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -157,8 +167,22 @@ export default function RelatoriosScreen() {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Dashboard</Text>
-            <Text style={styles.subtitle}>Visão geral e relatórios</Text>
+            <View style={styles.headerRow}>
+              <View style={styles.headerText}>
+                <Text style={styles.title}>Dashboard</Text>
+                <Text style={styles.subtitle}>
+                  {isAdmin ? 'Visão geral e relatórios' : 'Visão geral do estoque'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="log-out-outline" size={18} color={Colors.error} />
+                <Text style={styles.logoutText}>Sair</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Stats */}
@@ -210,7 +234,7 @@ export default function RelatoriosScreen() {
             )}
           </View>
 
-          {/* Relatórios PDF */}
+          {isAdmin && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Relatórios PDF</Text>
 
@@ -304,6 +328,7 @@ export default function RelatoriosScreen() {
               </TouchableOpacity>
             </Card>
           </View>
+          )}
 
           <View style={{ height: Spacing.xxxl }} />
         </ScrollView>
@@ -314,13 +339,41 @@ export default function RelatoriosScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    ...scrollableScreen,
     backgroundColor: Colors.background,
   },
+  scroll: {
+    flex: 1,
+    minHeight: 0,
+  },
   header: {
-    paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.lg,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  headerText: {
+    flex: 1,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.lg,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.25)',
+  },
+  logoutText: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    color: Colors.error,
   },
   title: {
     fontSize: Typography.size.xxl,
@@ -341,7 +394,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.xxxl,
-    flexGrow: 1,
   },
   statsRow: {
     flexDirection: 'row',

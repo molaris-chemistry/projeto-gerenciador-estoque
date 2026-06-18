@@ -1,8 +1,27 @@
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { BASE_URL, getAuthToken } from './api';
+import api, { BASE_URL, getAuthToken } from './api';
 
-async function downloadPdf(endpoint: string, filename: string): Promise<void> {
+async function downloadPdfWeb(endpoint: string, filename: string): Promise<void> {
+  const response = await api.get(`/relatorios/${endpoint}`, {
+    responseType: 'blob',
+    headers: {
+      Accept: 'application/pdf, application/octet-stream, */*',
+    },
+  });
+  const blob = response.data as Blob;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadPdfNative(endpoint: string, filename: string): Promise<void> {
   const token = getAuthToken();
   const url = `${BASE_URL}/relatorios/${endpoint}`;
   const fileUri = (FileSystem.cacheDirectory ?? '') + filename;
@@ -25,6 +44,14 @@ async function downloadPdf(endpoint: string, filename: string): Promise<void> {
     dialogTitle: 'Abrir relatório',
     UTI: 'com.adobe.pdf',
   });
+}
+
+async function downloadPdf(endpoint: string, filename: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    await downloadPdfWeb(endpoint, filename);
+    return;
+  }
+  await downloadPdfNative(endpoint, filename);
 }
 
 export async function downloadRelatorioGeral(): Promise<void> {

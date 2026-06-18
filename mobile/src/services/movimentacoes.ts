@@ -35,6 +35,10 @@ export async function createMovimentacao(
   return response.data;
 }
 
+export async function deleteMovimentacao(id: number): Promise<void> {
+  await api.delete(`/movimentacoes/${id}`);
+}
+
 /**
  * Busca todos os reagentes para o picker
  */
