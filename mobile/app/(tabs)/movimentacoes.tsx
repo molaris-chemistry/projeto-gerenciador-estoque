@@ -350,11 +350,13 @@ export default function MovimentacoesScreen() {
                 </View>
               }
               refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  tintColor={Colors.primary}
-                />
+                Platform.OS === 'web' ? undefined : (
+                  <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    tintColor={Colors.primary}
+                  />
+                )
               }
               showsVerticalScrollIndicator={false}
             />

@@ -3,21 +3,19 @@ import {
   View,
   Text,
   FlatList,
-  ScrollView,
   StyleSheet,
   RefreshControl,
   StatusBar,
   Pressable,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import {
   scrollableListStyle,
   scrollableScreen,
-  scrollViewStyle,
   shouldClipListSubviews,
 } from '@/constants/layout';
 import { SearchBar, Button } from '@/components/ui';
@@ -35,7 +33,10 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'lowstock', label: '⚠ Estoque Baixo' },
 ];
 
+const TAB_BAR_HEIGHT = 76;
+
 export default function CatalogoScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isAdmin } = useAuth();
 
@@ -58,7 +59,7 @@ export default function CatalogoScreen() {
       loadAll().finally(() => {
         if (loading) setLoading(false);
       });
-      
+
       // Atualiza resultados de busca se houver
       if (searchQuery.trim().length >= 2) {
         searchReagentes(searchQuery.trim())
@@ -199,42 +200,25 @@ export default function CatalogoScreen() {
 
   const keyExtractor = useCallback((item: Reagente) => String(item.id), []);
 
-  const refreshControl = (
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      tintColor={Colors.cyan}
-      colors={[Colors.cyan]}
-    />
-  );
-
   if (Platform.OS === 'web') {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={[styles.safe, { paddingTop: insets.top, paddingBottom: TAB_BAR_HEIGHT }]}>
         <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-        <ScrollView
-          style={scrollViewStyle}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator
-          nestedScrollEnabled
-          refreshControl={refreshControl}
-        >
-          {renderHeader()}
-          {!loading && displayedReagentes.length === 0 && renderEmpty()}
-          {displayedReagentes.map((item) => (
-            <ReagenteCard
-              key={item.id}
-              reagente={item}
-              onPress={() => handleCardPress(item.id)}
-            />
-          ))}
-        </ScrollView>
-      </SafeAreaView>
+        {renderHeader()}
+        {!loading && displayedReagentes.length === 0 && renderEmpty()}
+        {displayedReagentes.map((item) => (
+          <ReagenteCard
+            key={item.id}
+            reagente={item}
+            onPress={() => handleCardPress(item.id)}
+          />
+        ))}
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <View style={[styles.safe, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
 
       <FlatList
@@ -247,13 +231,20 @@ export default function CatalogoScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
-        refreshControl={refreshControl}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.cyan}
+            colors={[Colors.cyan]}
+          />
+        }
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
         removeClippedSubviews={shouldClipListSubviews}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

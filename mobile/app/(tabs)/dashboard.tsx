@@ -2,13 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Card } from "@/components/ui";
 import {
   Radius as BorderRadius,
@@ -21,6 +22,8 @@ const FontSize = Typography.size;
 const FontWeight = Typography.weight;
 import { useDashboard } from "@/contexts/DashboardContext";
 import type { Reagente } from "@/types";
+
+const TAB_BAR_HEIGHT = 76;
 
 type StatCardProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -89,6 +92,7 @@ function AlertaItem({ reagente, tipo }: AlertaItemProps) {
 }
 
 export default function DashboardScreen() {
+  const insets = useSafeAreaInsets();
   const {
     totalReagentes,
     movimentacoesHoje,
@@ -102,15 +106,63 @@ export default function DashboardScreen() {
 
   const semAlertas = totalAlertas === 0;
 
+  if (Platform.OS === 'web') {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, paddingBottom: TAB_BAR_HEIGHT }]}>
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : (
+          <View style={styles.scrollContent}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Dashboard</Text>
+              <Text style={styles.subtitle}>Visão geral do estoque</Text>
+            </View>
+            <View style={styles.statsRow}>
+              <StatCard icon="flask" label="Total de reagentes" value={totalReagentes} color={Colors.primary} />
+              <StatCard icon="swap-horizontal" label="Movimentações hoje" value={movimentacoesHoje} color={Colors.cyan} />
+              <StatCard icon="warning" label="Itens em alerta" value={totalAlertas} color={Colors.warning} />
+            </View>
+            {error && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="cloud-offline-outline" size={16} color={Colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Alertas</Text>
+              {semAlertas ? (
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="shield-checkmark-outline" size={40} color={Colors.success} />
+                  <Text style={styles.emptyText}>Nenhum alerta no momento. Estoque em dia!</Text>
+                </View>
+              ) : (
+                <View style={{ gap: Spacing.md }}>
+                  {alertas.estoqueMinimo.map((r) => (
+                    <AlertaItem key={`min-${r.id}`} reagente={r} tipo="estoqueMinimo" />
+                  ))}
+                  {alertas.vencendo.map((r) => (
+                    <AlertaItem key={`venc-${r.id}`} reagente={r} tipo="vencendo" />
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {isLoading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : (
         <ScrollView
-          style={{ flex: 1 }}
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -195,7 +247,7 @@ export default function DashboardScreen() {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -203,6 +255,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: Spacing.xl,

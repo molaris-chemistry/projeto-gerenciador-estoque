@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import { Ionicons } from '@expo/vector-icons';
@@ -113,22 +113,24 @@ export default function TabLayout() {
 function AuthenticatedTabLayout() {
   const { totalAlertas } = useDashboard();
 
+  const isWeb = Platform.OS === 'web';
+
   return (
     <View style={tabRootStyle}>
       <Tabs style={tabRootStyle}>
-        <View style={styles.tabContent}>
+        <View style={[styles.tabContent, isWeb && (styles.tabContentWeb as any)]}>
           <TabSlot />
         </View>
-        <TabList style={styles.tabBar}>
-        {TABS.map((tab) => (
-          <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
-            <TabItem
-              tab={tab}
-              badgeCount={tab.name === 'relatorios' ? totalAlertas : 0}
-            />
-          </TabTrigger>
-        ))}
-      </TabList>
+        <TabList style={[styles.tabBar, isWeb && (styles.tabBarWeb as any)]}>
+          {TABS.map((tab) => (
+            <TabTrigger key={tab.name} name={tab.name} href={tab.href} style={styles.tabTrigger} asChild>
+              <TabItem
+                tab={tab}
+                badgeCount={tab.name === 'relatorios' ? totalAlertas : 0}
+              />
+            </TabTrigger>
+          ))}
+        </TabList>
       </Tabs>
     </View>
   );
@@ -145,6 +147,10 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
   },
+  tabContentWeb: {
+    flex: 1,
+    overflow: 'auto' as any,
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
@@ -153,6 +159,13 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     paddingTop: Spacing.sm,
     paddingHorizontal: Spacing.md,
+  },
+  tabBarWeb: {
+    position: 'fixed' as any,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
   },
   tabTrigger: {
     flex: 1,
